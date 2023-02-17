@@ -1,9 +1,7 @@
-//! Note(Jasper): I'm still working out the best way to use rocket with sqlx so don't look at any of
-//! this too closely.
-
 use crate::database::Connection;
 use crate::error::Error;
 use crate::session::{Session, UserId};
+use log::info;
 use regex::Regex;
 use rocket::response::Redirect;
 use rocket::serde::json::Json;
@@ -125,6 +123,11 @@ pub async fn sign_up(
     }
 
     let new_user_id = Uuid::new_v4();
+    info!(
+        "Registering new user {} to uuid {}",
+        credentials.email, new_user_id
+    );
+
     sqlx::query("INSERT INTO users (uid, email, password_hash) VALUES (?, ?, ?)")
         .bind(new_user_id)
         .bind(credentials.email)

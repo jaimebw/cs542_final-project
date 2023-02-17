@@ -1,7 +1,5 @@
 use crate::env::{setup_dotenv, var};
 use log::{error, warn, LevelFilter};
-use rocket::fs::FileServer;
-use rocket::routes;
 
 use error::MixedResult as Result;
 
@@ -29,32 +27,15 @@ fn main() {
     }
 }
 
-async fn begin_async() -> anyhow::Result<()> {
+async fn begin_async() -> std::result::Result<(), Box<dyn 'static + std::error::Error>> {
     // Create database pool
     let pool = sqlx::sqlite::SqlitePoolOptions::new()
         .max_connections(5)
         .connect(&var("DATABASE_URL"))
         .await?;
 
-    // Create rocket server and initialize the routes to be used
-    let _ = rocket::build()
-        .manage(pool)
-        .mount("/static", FileServer::from("./static"))
-        .mount("/index", routes![routes::index_page])
-        .mount(
-            "/user",
-            routes![routes::user::login_page, routes::user::user_homepage],
-        )
-        .mount(
-            "/api/user",
-            routes![
-                routes::user::login,
-                routes::user::sign_up,
-                routes::user::logout
-            ],
-        )
-        .launch()
-        .await?;
+    // Create and launch rocket server and initialize managed resources
+    let _ = routes::build_app().manage(pool).launch().await?;
 
     Ok(())
 }
@@ -68,5 +49,7 @@ fn setup_logging() {
         .filter_module("hyper", LevelFilter::Warn)
         .filter_module("reqwest", LevelFilter::Warn)
         .filter_module("cookie_store", LevelFilter::Warn)
+        .filter_module("sqlx", LevelFilter::Warn)
+        .filter_module("_", LevelFilter::Warn)
         .init();
 }
