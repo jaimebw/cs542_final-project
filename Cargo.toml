@@ -5,27 +5,41 @@ edition = "2021"
 
 [features]
 default = ["tokio/rt-multi-thread", "reqwest/json", "reqwest/rustls-tls", "serde/derive",
-    "log/max_level_debug", "log/release_max_level_debug", "sqlx/uuid", "rocket/json", "rocket/secrets", "uuid/v4",
+    "log/max_level_debug", "log/release_max_level_info", "rocket/json", "rocket/secrets", "sqlx/uuid", "uuid/v4",
     "sqlite"]
 sqlite = ["sqlx/sqlite", "sqlx/runtime-tokio-rustls", "rusqlite"]
 
 # The documentation of each dependency can be found at https://crates.io/crates/<name>
 [dependencies]
+# Web framework used in this project
 rocket = "0.5.0-rc.2"
+
+# Async/await runtime which manages execution of incomming request handling
+tokio = "1.25.0"
+
+# Database library, UUID generation, and .env config for database connection
 sqlx = "0.6"
 uuid = "1"
-tokio = "1.25.0"
-reqwest = "0.11.14"
-log = "0.4"
-pretty_env_logger = "0.4"
 dotenvy = "0.15.6"
-serde = "1.0"
-serde_json = "1.0"
+
+# SHA256 implementation for hashing passwords
 sha2 = "0.10.6"
 digest = "0.10.6"
+
+# Logging
+log = "0.4"
+pretty_env_logger = "0.4"
+
+# serializing/deserializing input data as well as input validation
+serde = "1.0"
+serde_json = "1.0"
 regex = "1"
+
+# HTTP/HTTPS client for sending requests to Amazon
+reqwest = "0.11.14"
+
 
 [build-dependencies]
 # This is the same sqlite library used internally by sqlx.
 # I included it to create local.sqlite from the schema.sql before building the rest of the project.
-rusqlite = {version="*", optional=true}
+rusqlite = { version = "*", optional = true }
