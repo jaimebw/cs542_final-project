@@ -2,13 +2,12 @@
 //! this too closely.
 
 use crate::database::Connection;
+use crate::error::Error;
 use crate::session::{Session, UserId};
-use log::error;
 use regex::Regex;
-use rocket::response::status::Unauthorized;
 use rocket::response::Redirect;
 use rocket::serde::json::Json;
-use rocket::{get, post, uri, Responder};
+use rocket::{get, post, uri};
 use serde::Deserialize;
 use sha2::{Digest, Sha256};
 use sqlx::types::Uuid;
@@ -43,7 +42,6 @@ impl<'a> UserCredentials<'a> {
             return Some("Password can not be more than 512 characters");
         }
 
-        // What else?
         None
     }
 
@@ -59,22 +57,25 @@ impl<'a> UserCredentials<'a> {
 }
 
 #[get("/login")]
-pub async fn login_page(session: Session<'_>, mut database: Connection<Sqlite>) -> Redirect {
+pub async fn login_page(
+    session: Session<'_>,
+    mut database: Connection<Sqlite>,
+) -> crate::Result<Redirect> {
     if let Some(user_id) = session.user_id() {
-        let user_exists = sqlx::query_as("SELECT EXISTS(SELECT 1 FROM users WHERE uid = ?)")
+        let (user_exists,) = sqlx::query_as("SELECT EXISTS(SELECT 1 FROM users WHERE uid = ?)")
             .bind(user_id)
             .fetch_one(&mut *database)
-            .await;
+            .await?;
 
-        if let Ok((true,)) = user_exists {
-            // TODO: Navigate to homepage
+        if user_exists {
+            return Ok(Redirect::to(uri!(user_homepage)));
         } else {
             // ID is invalid so remove it (probably from a previous debug version)
             session.remove_user_id();
         }
     }
 
-    Redirect::to(uri!("/static/login.html"))
+    Ok(Redirect::to(uri!("/static/login.html")))
 }
 
 #[post("/login", data = "<credentials>")]
@@ -82,32 +83,22 @@ pub async fn login(
     session: Session<'_>,
     mut database: Connection<Sqlite>,
     credentials: Json<UserCredentials<'_>>,
-) -> Result<Redirect, Unauthorized<&'static str>> {
-    let user_id = sqlx::query_as(r#"SELECT uid FROM users WHERE email = ? AND password_hash = ?"#)
+) -> crate::Result<Redirect> {
+    let user_id = sqlx::query_as("SELECT uid FROM users WHERE email = ? AND password_hash = ?")
         .bind(credentials.email)
         .bind(&credentials.password_hash()[..])
         .fetch_optional(&mut *database)
-        .await;
+        .await?;
 
     match user_id {
-        Ok(Some((id,))) => {
+        Some((id,)) => {
             session.set_user_id(id);
             Ok(Redirect::found(uri!(super::index_page)))
         }
-        Ok(None) => Err(Unauthorized(Some(
+        None => Err(Error::from(
             "Email/password combination does not match any registered user",
-        ))),
-        _ => Ok(todo!()),
+        )),
     }
-}
-
-#[derive(Debug, Responder)]
-pub enum SignUpResponse {
-    Success(Redirect),
-    #[response(status = 400)]
-    BadRequest(&'static str),
-    #[response(status = 500)]
-    SqlError(()),
 }
 
 #[post("/signup", data = "<credentials>")]
@@ -115,37 +106,34 @@ pub async fn sign_up(
     session: Session<'_>,
     mut database: Connection<Sqlite>,
     credentials: Json<UserCredentials<'_>>,
-) -> SignUpResponse {
+) -> crate::Result<Redirect> {
     if !credentials.is_valid_email() {
-        return SignUpResponse::BadRequest("Email must be a valid email address");
+        return Err(Error::from("Email must be a valid email address"));
     }
 
     if let Some(issue) = credentials.check_password_for_issues() {
-        return SignUpResponse::BadRequest(issue);
+        return Err(Error::from(issue));
     }
 
-    let user_exists = sqlx::query_as("SELECT EXISTS(SELECT 1 FROM users WHERE email = ?)")
+    let (user_exists,) = sqlx::query_as("SELECT EXISTS(SELECT 1 FROM users WHERE email = ?)")
         .bind(credentials.email)
         .fetch_one(&mut *database)
-        .await;
+        .await?;
 
-    match user_exists {
-        Ok((true,)) => SignUpResponse::BadRequest("The requested email is already in use"),
-        Ok((false,)) => {
-            let new_user_id = Uuid::new_v4();
-            session.set_user_id(new_user_id);
-            // TODO: Add user
-
-            SignUpResponse::Success(Redirect::to(uri!(user_homepage)))
-        }
-        Err(err) => {
-            error!(
-                "Encountered error while attempting to register user: {:?}",
-                err
-            );
-            SignUpResponse::SqlError(())
-        }
+    if user_exists {
+        return Err(Error::from("The requested email is already in use"));
     }
+
+    let new_user_id = Uuid::new_v4();
+    sqlx::query("INSERT INTO users (uid, email, password_hash) VALUES (?, ?, ?)")
+        .bind(new_user_id)
+        .bind(credentials.email)
+        .bind(&credentials.password_hash()[..])
+        .execute(&mut *database)
+        .await?;
+
+    session.set_user_id(new_user_id);
+    Ok(Redirect::to(uri!(user_homepage)))
 }
 
 #[get("/logout")]

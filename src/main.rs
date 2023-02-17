@@ -3,8 +3,11 @@ use log::{error, warn, LevelFilter};
 use rocket::fs::FileServer;
 use rocket::routes;
 
+use error::MixedResult as Result;
+
 mod database;
 mod env;
+mod error;
 mod routes;
 mod session;
 
@@ -14,6 +17,7 @@ fn main() {
 
     // Begin tokio async runtime
     let err = tokio::runtime::Builder::new_multi_thread()
+        .thread_name("rocket-worker-thread")
         .enable_all()
         .build()
         .unwrap()
