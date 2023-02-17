@@ -1,0 +1,32 @@
+[package]
+name = "cs542_group_project"
+version = "0.1.0"
+edition = "2021"
+
+[features]
+default = ["tokio/rt-multi-thread", "reqwest/json", "reqwest/rustls-tls", "serde/derive",
+    "log/max_level_debug", "log/release_max_level_debug", "sqlx/uuid", "rocket/json", "rocket/secrets", "uuid/v4",
+    "sqlite"]
+sqlite = ["sqlx/sqlite", "sqlx/runtime-tokio-rustls", "rusqlite"]
+
+# The documentation of each dependency can be found at https://crates.io/crates/<name>
+[dependencies]
+rocket = "0.5.0-rc.2"
+sqlx = "0.6"
+uuid = "1"
+tokio = "1.25.0"
+reqwest = "0.11.14"
+log = "0.4"
+pretty_env_logger = "0.4"
+dotenvy = "0.15.6"
+anyhow = "1.0"
+serde = "1.0"
+serde_json = "1.0"
+sha2 = "0.10.6"
+digest = "0.10.6"
+regex = "1"
+
+[build-dependencies]
+# This is the same sqlite library used internally by sqlx.
+# I included it to create local.sqlite from the schema.sql before building the rest of the project.
+rusqlite = {version="*", optional=true}
