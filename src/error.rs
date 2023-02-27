@@ -12,6 +12,7 @@ pub type MixedResult<T> = Result<T, Error>;
 pub enum Error {
     BadRequest(Cow<'static, str>),
     SqlError(sqlx::Error),
+    TemplateError(tera::Error),
 }
 
 impl<'r, 'o: 'r> Responder<'r, 'o> for Error {
@@ -28,7 +29,22 @@ impl<'r, 'o: 'r> Responder<'r, 'o> for Error {
                 );
                 Err(Status::InternalServerError)
             }
+            Error::TemplateError(err) => {
+                error!(
+                    "{} {}: Encountered template error: {}",
+                    request.method(),
+                    request.uri().path(),
+                    err
+                );
+                Err(Status::InternalServerError)
+            }
         }
+    }
+}
+
+impl From<tera::Error> for Error {
+    fn from(error: tera::Error) -> Self {
+        Error::TemplateError(error)
     }
 }
 
