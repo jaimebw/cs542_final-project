@@ -1,7 +1,7 @@
 use crate::session::Session;
 use rocket::fs::FileServer;
-use rocket::{get, routes, Build, Rocket, State};
-use tera::{Context, Tera};
+use rocket::{get, routes, Build, Rocket};
+use rocket_dyn_templates::{context, Template};
 
 pub mod user;
 
@@ -25,12 +25,12 @@ pub fn index_page() -> &'static str {
 
 /// A basic example using the tera struct we set up in templates.rs when handling a route.
 #[get("/")]
-pub fn template_example(session: Session<'_>, tera: &State<Tera>) -> crate::Result<String> {
-    let mut context = Context::new();
+pub fn template_example(session: Session<'_>) -> Template {
+    let mut user_id = None;
 
     if let Some(current_user) = session.user_id() {
-        context.insert("user_id", &format!("{:?}", current_user));
+        user_id = Some(format!("{:?}", current_user));
     }
 
-    Ok(tera.render("basic.html", &context)?)
+    Template::render("basic.html", context! { user_id })
 }

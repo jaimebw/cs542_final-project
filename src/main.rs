@@ -1,5 +1,6 @@
 use crate::env::{setup_dotenv, var};
 use log::{error, warn, LevelFilter};
+use rocket_dyn_templates::Template;
 
 use crate::templates::setup_template_loader;
 use error::MixedResult as Result;
@@ -37,12 +38,16 @@ async fn begin_async() -> std::result::Result<(), Box<dyn 'static + std::error::
         .await?;
 
     // Create template loader
-    let tera = setup_template_loader()?;
+    let templates = Template::try_custom(|builder| {
+        // Pass template engine to setup function
+        setup_template_loader(&mut builder.tera)?;
+        Ok(())
+    });
 
     // Create and launch rocket server and initialize managed resources
     let _ = routes::build_app()
+        .attach(templates)
         .manage(pool)
-        .manage(tera)
         .launch()
         .await?;
 

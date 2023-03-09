@@ -6,7 +6,7 @@ edition = "2021"
 [features]
 default = ["tokio/rt-multi-thread", "reqwest/json", "reqwest/rustls-tls", "serde/derive",
     "log/max_level_debug", "log/release_max_level_info", "rocket/json", "rocket/secrets", "sqlx/uuid", "uuid/v4",
-    "sqlite"]
+    "rocket_dyn_templates/tera", "sqlite"]
 sqlite = ["sqlx/sqlite", "sqlx/runtime-tokio-rustls", "rusqlite"]
 
 # The documentation of each dependency can be found at https://crates.io/crates/<name>
@@ -36,7 +36,8 @@ serde_json = "1.0"
 regex = "1"
 
 # Templating
-tera = "1.17.1"
+rocket_dyn_templates = "0.1.0-rc.2"
+tera = "1.10"
 
 # HTTP/HTTPS client for sending requests to Amazon
 reqwest = "0.11.14"
