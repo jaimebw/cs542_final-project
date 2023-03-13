@@ -2,7 +2,7 @@ use crate::env::{setup_dotenv, var};
 use log::{error, warn, LevelFilter};
 use rocket_dyn_templates::Template;
 
-use crate::templates::setup_template_loader;
+use crate::templates::{setup_template_loader, TemplateUrlLoader};
 use error::MixedResult as Result;
 
 mod database;
@@ -37,19 +37,18 @@ async fn begin_async() -> std::result::Result<(), Box<dyn 'static + std::error::
         .connect(&var("DATABASE_URL"))
         .await?;
 
+    // Create and launch rocket server and initialize managed resources
+    let app = routes::build_app();
+    let url_loader = TemplateUrlLoader::from(&app);
+
     // Create template loader
-    let templates = Template::try_custom(|builder| {
+    let templates = Template::try_custom(move |builder| {
         // Pass template engine to setup function
-        setup_template_loader(&mut builder.tera)?;
+        setup_template_loader(&mut builder.tera, url_loader.to_owned())?;
         Ok(())
     });
 
-    // Create and launch rocket server and initialize managed resources
-    let _ = routes::build_app()
-        .attach(templates)
-        .manage(pool)
-        .launch()
-        .await?;
+    let _ = app.attach(templates).manage(pool).launch().await?;
 
     Ok(())
 }
