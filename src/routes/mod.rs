@@ -18,10 +18,16 @@ pub fn build_app() -> Rocket<Build> {
         )
 }
 
+//#[get("/")]
+//pub fn index_page() -> &'static str {
+//    "TODO: Load the homepage with some trending products"
+//}
+
 #[get("/")]
-pub fn index_page() -> &'static str {
-    "TODO: Load the homepage with some trending products"
+pub fn index_page() -> Template{
+    Template::render("index.html",context! {})
 }
+
 
 /// A basic example using the tera struct we set up in templates.rs when handling a route.
 #[get("/")]
