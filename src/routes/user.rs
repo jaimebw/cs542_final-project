@@ -24,17 +24,17 @@ pub async fn index(session: Session<'_>,)->crate::Result<Redirect> {
 
 #[get("/index")]
 pub async fn index_page(session: Session<'_>) -> Template{
-    Template::render("index.html.tera", context! {})
+    Template::render("index", context! {})
 }
 
 #[get("/login")]
 pub async fn login_page(session: Session<'_>) -> Template { 
     // Route to the login page.
     if session.user_id().is_none(){
-        Template::render("login.html.tera", context!{})
+        Template::render("login", context!{})
     }
     else{
-        Template::render("index.html.tera",context! {})
+        Template::render("index",context! {})
     }
 
 }

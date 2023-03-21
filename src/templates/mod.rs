@@ -9,10 +9,6 @@ use tera::Tera;
 ///
 /// https://github.com/Keats/tera/blob/master/examples/basic/main.rs
 pub fn setup_template_loader(tera: &mut Tera, url_loader: TemplateUrlLoader) -> tera::Result<()> {
-    // The default initializer does not inspect the subdirectories of templates, so we just restart
-    // the template engine with the corrected file glob.
-    *tera = Tera::new("templates/**/*")?;
-
     tera.register_function("url_for", url_loader);
 
     Ok(())
