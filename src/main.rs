@@ -64,6 +64,6 @@ fn setup_logging() {
         .filter_module("reqwest", LevelFilter::Warn)
         .filter_module("cookie_store", LevelFilter::Warn)
         .filter_module("sqlx", LevelFilter::Warn)
-        .filter_module("_", LevelFilter::Warn)
+        // .filter_module("_", LevelFilter::Warn)
         .init();
 }

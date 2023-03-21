@@ -1,6 +1,6 @@
 {% extends "base" %}
 
-{% block app_content %}
+{% block content %}
     <div class="form-outline mb-4">
         <div class="text-center">
             <h1>Sign In</h1>
