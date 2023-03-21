@@ -75,7 +75,7 @@ impl<'r> FromRequest<'r> for UserId {
             .and_then(|session| {
                 session.user_id().map(UserId).into_outcome((
                     Status::Unauthorized,
-                    Redirect::to(uri!(crate::routes::user::login_page)),
+                    Redirect::to(uri!(crate::routes::render_routes::login_page)),
                 ))
             })
     }

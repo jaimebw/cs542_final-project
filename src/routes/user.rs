@@ -13,81 +13,45 @@ use rocket::form::Form;
 
 #[get("/")]
 pub async fn index(session: Session<'_>,)->crate::Result<Redirect> {
+    // Redirect to index or login dependeing on the session
     if session.user_id().is_none(){
-    
-        Ok(Redirect::to(uri!(login_page)))
+        Ok(Redirect::to("/login"))
     }
     else{
-        Ok(Redirect::to(uri!(index_page)))
+        Ok(Redirect::to("/index"))
     }
 }
 
-#[get("/index")]
-pub async fn index_page(session: Session<'_>) -> Template{
-    Template::render("index", context! {})
-}
-
-#[get("/login")]
-pub async fn login_page(session: Session<'_>) -> Template { 
-    // Route to the login page.
-    if session.user_id().is_none(){
-        Template::render("login", context!{})
-    }
-    else{
-        Template::render("index",context! {})
-    }
-
-}
-
-
-#[post("/login",data = "<credentials>")]
+#[post("/login", data = "<credentials>")]
 pub async fn login(session: Session<'_>,mut database: Connection<Sqlite>,
                    credentials: Form<UserCredentials<'_>>) -> crate::Result<Redirect> {
-
-    if !credentials.is_valid_email() {
-        return Err(Error::from("Email must be a valid email address"));
-    }
-     if !credentials.is_valid_email() {
-        return Err(Error::from("Email must be a valid email address"));
-    }
-
-    if let Some(issue) = credentials.check_password_for_issues() {
-        return Err(Error::from(issue));
-    }
-
-    let (user_exists,) = sqlx::query_as("SELECT EXISTS(SELECT 1 FROM users WHERE email = ?)")
-        .bind(credentials.email)
-        .fetch_one(&mut *database)
-        .await?;
-
-    if user_exists {
-        return Err(Error::from("The requested email is already in use"));
-    }
-
-    let new_user_id = Uuid::new_v4();
-    info!(
-        "Registering new user {} to uuid {}",
-        credentials.email, new_user_id
-    );
-    
-    sqlx::query("INSERT INTO users (uid, email, password_hash) VALUES (?, ?, ?)")
-        .bind(new_user_id)
+    let user_id = sqlx::query_as("SELECT uid FROM users WHERE email = ? AND password_hash = ?")
         .bind(credentials.email)
         .bind(&credentials.password_hash()[..])
-        .execute(&mut *database)
+        .fetch_optional(&mut *database)
         .await?;
-     session.set_user_id(new_user_id);
-     Ok(Redirect::to(uri!(index)))
+
+    match user_id {
+        Some((id,)) => {
+            session.set_user_id(id);
+            Ok(Redirect::to("/index"))
+        }
+        // TO-DO:
+        // 1. Add a flash error message
+        //  2. Add logging to this too
+        None => {
+            Ok(Redirect::to("/login"))
+        }
+    }
 }
 
-// Register
-/*
-#[post("/signup", data = "<credentials>")]
-pub async fn sign_up(
+#[post("/register", data = "<credentials>")]
+pub async fn register(
     session: Session<'_>,
     mut database: Connection<Sqlite>,
-    credentials: Json<UserCredentials<'_>>,
+    credentials: Form<UserCredentials<'_>>
 ) -> crate::Result<Redirect> {
+
     if !credentials.is_valid_email() {
         return Err(Error::from("Email must be a valid email address"));
     }
@@ -119,14 +83,12 @@ pub async fn sign_up(
         .await?;
 
     session.set_user_id(new_user_id);
-    Ok(Redirect::to(uri!(user_homepage)))
+    Ok(Redirect::to("/login"))
 }
-*/
 
 #[get("/logout")]
 pub async fn logout(session: Session<'_>) -> crate::Result<Redirect> {
-    // Change this so it redirect to the template
     session.remove_user_id();
-    Ok(Redirect::to(uri!(login_page)))
+    Ok(Redirect::to("/login"))
 }
 

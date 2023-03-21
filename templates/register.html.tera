@@ -1,0 +1,25 @@
+{% extends "base" %}
+
+{% block content %}
+    <h1>Register</h1>
+    <form action="/register" method="post">
+        <div class="mb-3">
+            <label for="inputName" class="form-label">Name</label>
+            <input type="text" name="name" class="form-control" id="inputName" required>
+        </div>
+        <div class="mb-3">
+            <label for="inputEmail" class="form-label">Email address</label>
+            <input type="email" name="email" class="form-control" id="inputEmail" aria-describedby="emailHelp" required>
+            <div id="emailHelp" class="form-text">We'll never share your email with anyone else.</div>
+        </div>
+        <div class="mb-3">
+            <label for="inputPassword" class="form-label">Password</label>
+            <input type="password" name="password" class="form-control" id="inputPassword" required>
+        </div>
+        <div class="mb-3">
+            <label for="inputConfirmPassword" class="form-label">Confirm Password</label>
+            <input type="password" name="confirm_password" class="form-control" id="inputConfirmPassword" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Register</button>
+    </form>
+{% endblock %}
