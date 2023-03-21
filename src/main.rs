@@ -11,6 +11,7 @@ mod error;
 mod routes;
 mod session;
 mod templates;
+mod forms;
 
 fn main() {
     setup_logging();

@@ -1,5 +1,4 @@
 use crate::session::Session;
-use rocket::fs::FileServer;
 use rocket::{get, routes, Build, Rocket};
 use rocket_dyn_templates::{context, Template};
 
@@ -8,24 +7,22 @@ pub mod user;
 /// Setup all of the routes used by the app
 pub fn build_app() -> Rocket<Build> {
     rocket::build()
-        .mount("/static", FileServer::from("./static"))
-        .mount("/index", routes![index_page])
-        .mount("/user", routes![user::login_page, user::user_homepage])
-        .mount("/template", routes![template_example])
-        .mount(
-            "/api/user",
-            routes![user::login, user::sign_up, user::logout],
-        )
+        .mount("/", routes![user::index])
+        .mount("/", routes![user::index_page])
+        .mount("/", routes![user::login_page])
 }
 
-//#[get("/")]
-//pub fn index_page() -> &'static str {
-//    "TODO: Load the homepage with some trending products"
-//}
 
 #[get("/")]
-pub fn index_page() -> Template{
-    Template::render("index.html",context! {})
+pub fn index(session: Session<'_>) -> Template{
+
+    if session.user_id().is_none(){
+        Template::render("login.html",context! {})
+    }
+
+    else{
+        Template::render("index.html",context! {})
+    }
 }
 
 
