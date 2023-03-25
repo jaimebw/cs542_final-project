@@ -71,7 +71,7 @@ CREATE TABLE Contains_Reviews(
 amazonID CHAR(20),
 PID CHAR(20),
 rating REAL, 
-reviwdate DATE,
+reviewdate DATE,
 Primary Key( amazonID, PID),
 FOREIGN KEY(PID) REFERENCES Sold_Product_Manufactured (PID)ON DELETE CASCADE);
 
