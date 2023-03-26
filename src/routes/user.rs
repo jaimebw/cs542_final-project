@@ -1,29 +1,30 @@
 use crate::database::Connection;
-use crate::forms::UserCredentials;
 use crate::error::Error;
-use crate::session::{Session};
+use crate::forms::UserCredentials;
+use crate::session::Session;
 use log::info;
+use rocket::form::Form;
 use rocket::response::Redirect;
 use rocket::{get, post};
 use sqlx::types::Uuid;
 use sqlx::Sqlite;
-use rocket::form::Form;
-
 
 #[get("/")]
-pub async fn index(session: Session<'_>,)->crate::Result<Redirect> {
+pub async fn index(session: Session<'_>) -> crate::Result<Redirect> {
     // Redirect to index or login depending on the session
-    if session.user_id().is_none(){
+    if session.user_id().is_none() {
         Ok(Redirect::to("/login"))
-    }
-    else{
+    } else {
         Ok(Redirect::to("/index"))
     }
 }
 
 #[post("/login", data = "<credentials>")]
-pub async fn login(session: Session<'_>,mut database: Connection<Sqlite>,
-                   credentials: Form<UserCredentials<'_>>) -> crate::Result<Redirect> {
+pub async fn login(
+    session: Session<'_>,
+    mut database: Connection<Sqlite>,
+    credentials: Form<UserCredentials<'_>>,
+) -> crate::Result<Redirect> {
     let user_id = sqlx::query_as("SELECT uid FROM users WHERE email = ? AND password_hash = ?")
         .bind(credentials.email)
         .bind(&credentials.password_hash()[..])
@@ -38,9 +39,7 @@ pub async fn login(session: Session<'_>,mut database: Connection<Sqlite>,
         // TO-DO:
         // 1. Add a flash error message
         //  2. Add logging to this too
-        None => {
-            Ok(Redirect::to("/login"))
-        }
+        None => Ok(Redirect::to("/login")),
     }
 }
 
@@ -48,9 +47,8 @@ pub async fn login(session: Session<'_>,mut database: Connection<Sqlite>,
 pub async fn register(
     session: Session<'_>,
     mut database: Connection<Sqlite>,
-    credentials: Form<UserCredentials<'_>>
+    credentials: Form<UserCredentials<'_>>,
 ) -> crate::Result<Redirect> {
-
     if !credentials.is_valid_email() {
         return Err(Error::from("Email must be a valid email address"));
     }
@@ -90,4 +88,3 @@ pub async fn logout(session: Session<'_>) -> crate::Result<Redirect> {
     session.remove_user_id();
     Ok(Redirect::to("/login"))
 }
-

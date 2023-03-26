@@ -1,17 +1,16 @@
+use crate::build_rocket;
+use crate::env::setup_dotenv;
 use rand::Rng;
 use rocket::http::{ContentType, Status};
 use rocket::local::asynchronous::Client;
 use rocket::uri;
-use sqlx::{Pool, Sqlite};
 use sqlx::pool::PoolConnection;
-use crate::env::setup_dotenv;
-use crate::build_rocket;
+use sqlx::{Pool, Sqlite};
 
-use serial_test::serial;
-use uuid::Uuid;
 use crate::forms::UserCredentials;
 use crate::session::Session;
-
+use serial_test::serial;
+use uuid::Uuid;
 
 async fn create_client() -> Client {
     setup_dotenv();
@@ -42,13 +41,19 @@ fn rng_str(length: usize) -> String {
 pub async fn test_register() {
     let client = create_client().await;
 
-    let response = client.post(uri!(crate::routes::user::register))
+    let response = client
+        .post(uri!(crate::routes::user::register))
         .body("email=not_an_email&password=password123")
         .header(ContentType::Form)
-        .dispatch().await
-        .into_string().await;
+        .dispatch()
+        .await
+        .into_string()
+        .await;
 
-    assert_eq!(response, Some("Email must be a valid email address".to_string()));
+    assert_eq!(
+        response,
+        Some("Email must be a valid email address".to_string())
+    );
 }
 
 #[tokio::test]
@@ -64,10 +69,12 @@ pub async fn test_signup_new_user() {
         password: &password,
     };
 
-    let response = client.post(uri!(crate::routes::user::register))
+    let response = client
+        .post(uri!(crate::routes::user::register))
         .body(format!("email={}&password={}", data.email, data.password))
         .header(ContentType::Form)
-        .dispatch().await
+        .dispatch()
+        .await
         .status();
 
     // Ensure that we receive a redirect
@@ -75,16 +82,16 @@ pub async fn test_signup_new_user() {
 
     // Fetch new entry from the database and ensure it matches the requested password
     let mut database = client_database(&client).await;
-    let hash: Option<(Vec<u8>, )> = sqlx::query_as("SELECT password_hash FROM users WHERE email = ?")
-        .bind(data.email)
-        .bind(&data.password_hash()[..])
-        .fetch_optional(&mut database)
-        .await
-        .unwrap();
+    let hash: Option<(Vec<u8>,)> =
+        sqlx::query_as("SELECT password_hash FROM users WHERE email = ?")
+            .bind(data.email)
+            .bind(&data.password_hash()[..])
+            .fetch_optional(&mut database)
+            .await
+            .unwrap();
 
     assert_eq!(&hash.unwrap().0[..], &data.password_hash()[..]);
 }
-
 
 #[tokio::test]
 #[serial]
@@ -99,20 +106,23 @@ pub async fn test_login_logout() {
         password: &password,
     };
 
-    let _ = client.post(uri!(crate::routes::user::register))
+    let _ = client
+        .post(uri!(crate::routes::user::register))
         .body(format!("email={}&password={}", data.email, data.password))
         .header(ContentType::Form)
-        .dispatch().await;
+        .dispatch()
+        .await;
 
     // Replace with completely new client to test login
     drop(client);
     let client = create_client().await;
 
-
-    let response = client.post(uri!(crate::routes::user::login))
+    let response = client
+        .post(uri!(crate::routes::user::login))
         .body(format!("email={}&password={}", data.email, data.password))
         .header(ContentType::Form)
-        .dispatch().await;
+        .dispatch()
+        .await;
 
     assert_eq!(response.status(), Status::SeeOther);
 
@@ -120,7 +130,7 @@ pub async fn test_login_logout() {
 
     // Fetch new entry from the database and ensure it matches the requested password
     let database = client_database(&client);
-    let (user_id, ): (Uuid, ) = sqlx::query_as("SELECT uid FROM users WHERE email = ?")
+    let (user_id,): (Uuid,) = sqlx::query_as("SELECT uid FROM users WHERE email = ?")
         .bind(data.email)
         .fetch_one(&mut database.await)
         .await
@@ -128,7 +138,10 @@ pub async fn test_login_logout() {
 
     assert_eq!(session.user_id().unwrap(), user_id);
 
-    let response = client.get(uri!(crate::routes::user::logout)).dispatch().await;
+    let response = client
+        .get(uri!(crate::routes::user::logout))
+        .dispatch()
+        .await;
 
     assert_eq!(response.status(), Status::SeeOther);
     let session = Session::from(response.cookies());

@@ -9,13 +9,12 @@ use error::MixedResult as Result;
 mod database;
 mod env;
 mod error;
+mod forms;
 mod routes;
 mod session;
 mod templates;
-mod forms;
 
 type AnyResult<T> = std::result::Result<T, Box<dyn std::error::Error>>;
-
 
 fn main() {
     setup_logging();
@@ -37,7 +36,6 @@ fn main() {
         Err(e) => error!("Program exited early with error {}", e),
     }
 }
-
 
 async fn build_rocket() -> AnyResult<Rocket<Build>> {
     // Create database pool

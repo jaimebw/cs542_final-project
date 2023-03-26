@@ -1,6 +1,9 @@
-use rocket::{serde::{Deserialize, Serialize}, FromForm};
-use sha2::{Digest, Sha256};
 use regex::Regex;
+use rocket::{
+    serde::{Deserialize, Serialize},
+    FromForm,
+};
+use sha2::{Digest, Sha256};
 
 #[derive(FromForm, Serialize, Deserialize)]
 pub struct UserCredentials<'a> {

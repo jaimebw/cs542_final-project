@@ -3,7 +3,6 @@ mod url_for;
 pub use crate::templates::url_for::TemplateUrlLoader;
 use tera::Tera;
 
-
 /// Based on the example, it appears you may need to configure the templating before use to do some
 /// things.
 ///
