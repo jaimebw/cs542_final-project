@@ -1,0 +1,22 @@
+{% extends "base" %}
+
+{% block content %}
+  <div class="container">
+    <h1>About Amazon Price Tracker</h1>
+    <p>This project is the final project for CS 542. Our goal was to create a web application that allows users to track the prices of products on Amazon.com. By tracking the price history of a product, users can decide the best time to make a purchase and save money.</p>
+    <p>Our application allows users to search for a product by its name or URL on Amazon, and then add it to watch any changes the product value</p>
+    <h2>Features</h2>
+    <ul>
+      <li>Search for a product by name or URL on Amazon.com</li>
+      <li>View the price history graph of a product</li>
+      <li>Set up price alerts to receive notifications when the price drops</li>
+    </ul>
+    <h2>Team Members</h2>
+    <ul>
+      <li>J. Bowen Varela</li>
+      <li>F. Liu</li>
+      <li>J. Meggi</li>
+    </ul>
+  </div>
+{% endblock %}
+

@@ -1,7 +1,15 @@
-//! TODO: The login checks within this file should be done via a middleware
+use crate::session::{Session, UserId};
+use log::info;
+use rocket::{get, post};
 use crate::session::Session;
 use rocket::get;
 use rocket_dyn_templates::{context, Template};
+
+// TODO:
+//  - Add the session to the context so it can check in Tera, if the user is authenticated
+//      Maybe a is_anonymous method could work
+//! TODO: The login checks within this file should be done via a middleware
+
 
 #[get("/login")]
 pub async fn login_page(session: Session<'_>) -> Template {
@@ -31,4 +39,8 @@ pub async fn index_page(session: Session<'_>) -> Template {
     } else {
         Template::render("index", context! {})
     }
+}
+#[get("/about")]
+pub async fn about_page() -> Template{
+    Template::render("about",context! {})
 }
