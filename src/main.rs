@@ -1,5 +1,6 @@
 use crate::env::{setup_dotenv, var};
 use log::{error, warn, LevelFilter};
+use rocket::{Build, Rocket};
 use rocket_dyn_templates::Template;
 
 use crate::templates::{setup_template_loader, TemplateUrlLoader};
@@ -8,22 +9,27 @@ use error::MixedResult as Result;
 mod database;
 mod env;
 mod error;
+mod forms;
 mod routes;
 mod session;
 mod templates;
-mod forms;
+
+type AnyResult<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
 fn main() {
     setup_logging();
     setup_dotenv();
 
     // Begin tokio async runtime
-    let err = tokio::runtime::Builder::new_multi_thread()
+    let err: AnyResult<()> = tokio::runtime::Builder::new_multi_thread()
         .thread_name("rocket-worker-thread")
         .enable_all()
         .build()
         .unwrap()
-        .block_on(begin_async());
+        .block_on(async {
+            let _ = build_rocket().await?.launch().await?;
+            Ok(())
+        });
 
     match err {
         Ok(_) => warn!("Program exited early without error"),
@@ -31,7 +37,7 @@ fn main() {
     }
 }
 
-async fn begin_async() -> std::result::Result<(), Box<dyn 'static + std::error::Error>> {
+async fn build_rocket() -> AnyResult<Rocket<Build>> {
     // Create database pool
     let pool = sqlx::sqlite::SqlitePoolOptions::new()
         .max_connections(5)
@@ -49,9 +55,7 @@ async fn begin_async() -> std::result::Result<(), Box<dyn 'static + std::error::
         Ok(())
     });
 
-    let _ = app.attach(templates).manage(pool).launch().await?;
-
-    Ok(())
+    Ok(app.attach(templates).manage(pool))
 }
 
 fn setup_logging() {

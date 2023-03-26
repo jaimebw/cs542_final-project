@@ -43,6 +43,11 @@ tera = "1.10"
 reqwest = "0.11.14"
 
 
+[dev-dependencies]
+serial_test = "1.0.0"
+rand = "0.8.5"
+
+
 [build-dependencies]
 # This is the same sqlite library used internally by sqlx.
 # I included it to create local.sqlite from the schema.sql before building the rest of the project.

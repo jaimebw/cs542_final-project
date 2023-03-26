@@ -1,9 +1,10 @@
-use crate::session::Session;
-use rocket::{get, routes, Build, Rocket};
-use rocket_dyn_templates::{context, Template};
+use rocket::{routes, Build, Rocket};
 
-pub mod user;
 pub mod render_routes;
+pub mod user;
+
+#[cfg(test)]
+mod tests;
 
 /// Setup all of the routes used by the app
 pub fn build_app() -> Rocket<Build> {
