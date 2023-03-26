@@ -1,11 +1,10 @@
 use crate::database::Connection;
 use crate::forms::UserCredentials;
-use rocket_dyn_templates::{Template, tera::Tera, context};
 use crate::error::Error;
-use crate::session::{Session, UserId};
+use crate::session::{Session};
 use log::info;
 use rocket::response::Redirect;
-use rocket::{get, post, uri};
+use rocket::{get, post};
 use sqlx::types::Uuid;
 use sqlx::Sqlite;
 use rocket::form::Form;

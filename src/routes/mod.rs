@@ -1,6 +1,4 @@
-use crate::session::Session;
-use rocket::{get, routes, Build, Rocket};
-use rocket_dyn_templates::{context, Template};
+use rocket::{routes, Build, Rocket};
 
 pub mod user;
 pub mod render_routes;
@@ -21,19 +19,3 @@ pub fn build_app() -> Rocket<Build> {
                render_routes::login_page,
         render_routes::signup_page])
 }
-
-
-
-// A basic example using the tera struct we set up in templates.rs when handling a route.
-/*
-#[get("/")]
-pub fn template_example(session: Session<'_>) -> Template {
-    let mut user_id = None;
-
-    if let Some(current_user) = session.user_id() {
-        user_id = Some(format!("{:?}", current_user));
-    }
-
-    Template::render("basic.html", context! { user_id })
-}
-*/

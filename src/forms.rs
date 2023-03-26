@@ -2,7 +2,7 @@ use rocket::{serde::{Deserialize, Serialize}, FromForm};
 use sha2::{Digest, Sha256};
 use regex::Regex;
 
-#[derive(FromForm,Serialize,Deserialize)]
+#[derive(FromForm, Serialize, Deserialize)]
 pub struct UserCredentials<'a> {
     pub email: &'a str,
     pub password: &'a str,
@@ -43,9 +43,4 @@ impl<'a> UserCredentials<'a> {
 
         hasher.finalize().into()
     }
-}
-#[derive(FromForm)]
-pub struct LoginForm {
-    email:String,
-    password:String
 }

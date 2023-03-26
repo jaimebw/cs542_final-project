@@ -119,7 +119,7 @@ pub async fn test_login_logout() {
     let session = Session::from(response.cookies());
 
     // Fetch new entry from the database and ensure it matches the requested password
-    let mut database = client_database(&client);
+    let database = client_database(&client);
     let (user_id, ): (Uuid, ) = sqlx::query_as("SELECT uid FROM users WHERE email = ?")
         .bind(data.email)
         .fetch_one(&mut database.await)

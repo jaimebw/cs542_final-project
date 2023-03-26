@@ -19,6 +19,10 @@ pub struct Session<'r> {
 }
 
 impl<'r> Session<'r> {
+    pub fn is_logged_in(&self) -> bool {
+        self.user_id().is_some()
+    }
+
     pub fn user_id(&self) -> Option<Uuid> {
         let cookie = self.jar.get_private(USER_TOKEN)?;
         Uuid::parse_str(cookie.value()).ok()
