@@ -16,21 +16,7 @@ pub fn build_app() -> Rocket<Build> {
         .mount("/", routes![
                render_routes::index_page,
                render_routes::login_page,
-        render_routes::signup_page])
+               render_routes::signup_page,
+                render_routes::about_page])
 }
 
-
-
-// A basic example using the tera struct we set up in templates.rs when handling a route.
-/*
-#[get("/")]
-pub fn template_example(session: Session<'_>) -> Template {
-    let mut user_id = None;
-
-    if let Some(current_user) = session.user_id() {
-        user_id = Some(format!("{:?}", current_user));
-    }
-
-    Template::render("basic.html", context! { user_id })
-}
-*/

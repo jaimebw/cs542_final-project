@@ -1,14 +1,11 @@
-use crate::database::Connection;
-use crate::forms::UserCredentials;
 use rocket_dyn_templates::{Template, tera::Tera, context};
-use crate::error::Error;
 use crate::session::{Session, UserId};
 use log::info;
-use rocket::response::Redirect;
-use rocket::{get, post, uri};
-use sqlx::types::Uuid;
-use sqlx::Sqlite;
-use rocket::form::Form;
+use rocket::{get, post};
+
+// TODO:
+//  - Add the session to the context so it can check in Tera, if the user is authenticated
+//      Maybe a is_anonymous method could work
 
 #[get("/login")]
 pub async fn login_page(session: Session<'_>) -> Template { 
@@ -42,4 +39,8 @@ pub async fn index_page(session: Session<'_>) -> Template{
     else{
         Template::render("index", context! {})
     }
+}
+#[get("/about")]
+pub async fn about_page() -> Template{
+    Template::render("about",context! {})
 }
