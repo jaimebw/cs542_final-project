@@ -2,9 +2,9 @@
 -- file is changed.
 
 CREATE TABLE Site_users(
-sid CHAR(20),
-email CHAR(20),
-password_hash CHAR(20),
+sid BINARY(16),
+email VARCHAR(100),
+password_hash BINARY(32),
 PRIMARY KEY(sid));
 
 CREATE TABLE Department(
@@ -21,7 +21,7 @@ CREATE TABLE Sold_Product_Manufactured(
 PID CHAR(20),
 URL CHAR(20),
 name CHAR(20), 
-DepID CHAR(20)NOT NULL, 
+DepID CHAR(20)NOT NULL,
 ManuID CHAR(20)NOT NULL,
 Primary Key(PID),
 Foreign Key (DepID) REFERENCES Department(DepID),

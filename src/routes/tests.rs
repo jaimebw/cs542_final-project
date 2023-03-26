@@ -83,7 +83,7 @@ pub async fn test_signup_new_user() {
     // Fetch new entry from the database and ensure it matches the requested password
     let mut database = client_database(&client).await;
     let hash: Option<(Vec<u8>,)> =
-        sqlx::query_as("SELECT password_hash FROM users WHERE email = ?")
+        sqlx::query_as("SELECT password_hash FROM Site_users WHERE email = ?")
             .bind(data.email)
             .bind(&data.password_hash()[..])
             .fetch_optional(&mut database)
@@ -130,7 +130,7 @@ pub async fn test_login_logout() {
 
     // Fetch new entry from the database and ensure it matches the requested password
     let database = client_database(&client);
-    let (user_id,): (Uuid,) = sqlx::query_as("SELECT uid FROM users WHERE email = ?")
+    let (user_id,): (Uuid,) = sqlx::query_as("SELECT sid FROM Site_users WHERE email = ?")
         .bind(data.email)
         .fetch_one(&mut database.await)
         .await

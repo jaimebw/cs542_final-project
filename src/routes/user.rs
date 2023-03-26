@@ -25,7 +25,7 @@ pub async fn login(
     mut database: Connection<Sqlite>,
     credentials: Form<UserCredentials<'_>>,
 ) -> crate::Result<Redirect> {
-    let user_id = sqlx::query_as("SELECT uid FROM users WHERE email = ? AND password_hash = ?")
+    let user_id = sqlx::query_as("SELECT sid FROM Site_users WHERE email = ? AND password_hash = ?")
         .bind(credentials.email)
         .bind(&credentials.password_hash()[..])
         .fetch_optional(&mut *database)
@@ -57,7 +57,7 @@ pub async fn register(
         return Err(Error::from(issue));
     }
 
-    let (user_exists,) = sqlx::query_as("SELECT EXISTS(SELECT 1 FROM users WHERE email = ?)")
+    let (user_exists,) = sqlx::query_as("SELECT EXISTS(SELECT 1 FROM Site_users WHERE email = ?)")
         .bind(credentials.email)
         .fetch_one(&mut *database)
         .await?;
@@ -72,7 +72,7 @@ pub async fn register(
         credentials.email, new_user_id
     );
 
-    sqlx::query("INSERT INTO users (uid, email, password_hash) VALUES (?, ?, ?)")
+    sqlx::query("INSERT INTO Site_users (sid, email, password_hash) VALUES (?, ?, ?)")
         .bind(new_user_id)
         .bind(credentials.email)
         .bind(&credentials.password_hash()[..])
