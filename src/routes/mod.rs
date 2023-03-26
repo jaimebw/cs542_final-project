@@ -5,6 +5,9 @@ use rocket_dyn_templates::{context, Template};
 pub mod user;
 pub mod render_routes;
 
+#[cfg(test)]
+mod tests;
+
 /// Setup all of the routes used by the app
 pub fn build_app() -> Rocket<Build> {
     rocket::build()

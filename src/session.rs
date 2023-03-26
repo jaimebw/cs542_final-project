@@ -46,6 +46,12 @@ impl<'r> Session<'r> {
     }
 }
 
+impl<'r> From<&'r CookieJar<'r>> for Session<'r> {
+    fn from(jar: &'r CookieJar) -> Self {
+        Session { jar }
+    }
+}
+
 #[rocket::async_trait]
 impl<'r> FromRequest<'r> for Session<'r> {
     type Error = Infallible;

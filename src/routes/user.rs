@@ -13,7 +13,7 @@ use rocket::form::Form;
 
 #[get("/")]
 pub async fn index(session: Session<'_>,)->crate::Result<Redirect> {
-    // Redirect to index or login dependeing on the session
+    // Redirect to index or login depending on the session
     if session.user_id().is_none(){
         Ok(Redirect::to("/login"))
     }
