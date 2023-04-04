@@ -7,7 +7,6 @@ use rocket_dyn_templates::{context, Template};
 //      Maybe a is_anonymous method could work
 // TODO: The login checks within this file should be done via a middleware
 
-
 #[get("/login")]
 pub async fn login_page(session: Session<'_>) -> Template {
     // Template render of the login page
@@ -38,6 +37,6 @@ pub async fn index_page(session: Session<'_>) -> Template {
     }
 }
 #[get("/about")]
-pub async fn about_page() -> Template{
-    Template::render("about",context! {})
+pub async fn about_page() -> Template {
+    Template::render("about", context! {})
 }
