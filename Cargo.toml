@@ -16,6 +16,7 @@ rocket = "0.5.0-rc.2"
 
 # Async/await runtime which manages execution of incomming request handling
 tokio = "1.25.0"
+futures = "0.3.27"
 
 # Database library, UUID generation, and .env config for database connection
 sqlx = "0.6"
@@ -34,6 +35,7 @@ pretty_env_logger = "0.4"
 serde = "1.0"
 serde_json = "1.0"
 regex = "1"
+lazy_static = "1.4.0"
 
 # Templating
 rocket_dyn_templates = "0.1.0-rc.2"
@@ -41,6 +43,7 @@ tera = "1.10"
 
 # HTTP/HTTPS client for sending requests to Amazon
 reqwest = "0.11.14"
+select = "0.6.0"
 
 
 [dev-dependencies]
