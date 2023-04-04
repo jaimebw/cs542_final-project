@@ -1,10 +1,9 @@
 use lazy_static::lazy_static;
 use regex::Regex;
 
-mod rate_limit;
 mod offer;
 mod price;
-
+mod rate_limit;
 
 pub fn extract_asin(url: &str) -> Option<&str> {
     lazy_static! {
@@ -13,7 +12,6 @@ pub fn extract_asin(url: &str) -> Option<&str> {
 
     Some(ASIN_REGEX.captures(url)?.get(1)?.as_str())
 }
-
 
 #[cfg(test)]
 #[test]

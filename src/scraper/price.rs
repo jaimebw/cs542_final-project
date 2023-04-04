@@ -24,6 +24,7 @@ impl From<PriceUSD> for f64 {
     }
 }
 
+#[derive(Debug)]
 pub struct InsufficientPrecision;
 
 impl TryFrom<f32> for PriceUSD {

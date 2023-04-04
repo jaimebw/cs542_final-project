@@ -34,9 +34,9 @@ impl RateLimit {
     }
 
     pub async fn perform_rate_limited<F, R, A>(&self, func: F) -> R
-        where
-            F: FnOnce() -> A,
-            A: Future<Output = R>,
+    where
+        F: FnOnce() -> A,
+        A: Future<Output = R>,
     {
         let permit = match self.permits.acquire().await {
             Ok(permit) => permit,
