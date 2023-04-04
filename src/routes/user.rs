@@ -25,11 +25,12 @@ pub async fn login(
     mut database: Connection<Sqlite>,
     credentials: Form<UserCredentials<'_>>,
 ) -> crate::Result<Redirect> {
-    let user_id = sqlx::query_as("SELECT sid FROM Site_users WHERE email = ? AND password_hash = ?")
-        .bind(credentials.email)
-        .bind(&credentials.password_hash()[..])
-        .fetch_optional(&mut *database)
-        .await?;
+    let user_id =
+        sqlx::query_as("SELECT sid FROM Site_users WHERE email = ? AND password_hash = ?")
+            .bind(credentials.email)
+            .bind(&credentials.password_hash()[..])
+            .fetch_optional(&mut *database)
+            .await?;
 
     match user_id {
         Some((id,)) => {

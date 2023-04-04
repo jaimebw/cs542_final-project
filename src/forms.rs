@@ -5,7 +5,6 @@ use rocket::{
 };
 use sha2::{Digest, Sha256};
 
-
 #[derive(FromForm, Serialize, Deserialize)]
 pub struct UserCredentials<'a> {
     /// Form for logging in the web app
