@@ -1,7 +1,7 @@
 use crate::scraper::price::PriceUSD;
-use reqwest::Client;
 use select::node::Node;
 use select::predicate::{And, Attr, Class, Name, Text};
+use std::fmt::Debug;
 use std::str::FromStr;
 
 #[derive(Debug)]
@@ -54,6 +54,10 @@ impl<'a> TryFrom<Node<'a>> for Offer {
             .filter_map(|node| node.as_text())
             .map(|text| text.trim())
             .collect::<String>();
+
+        if ships_from.is_empty() {
+            return Err(MissingOfferField("ships_from"));
+        }
 
         let seller = value
             .find(Attr("id", "aod-offer-soldBy"))

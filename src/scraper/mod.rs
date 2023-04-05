@@ -1,9 +1,12 @@
 use lazy_static::lazy_static;
 use regex::Regex;
 
-mod offer;
-mod price;
+mod api;
+pub mod offer;
+pub mod price;
 mod rate_limit;
+
+pub use api::AmazonApi;
 
 pub fn extract_asin(url: &str) -> Option<&str> {
     lazy_static! {
