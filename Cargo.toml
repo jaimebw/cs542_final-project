@@ -56,3 +56,6 @@ rand = "0.8.5"
 # This is the same sqlite library used internally by sqlx.
 # I included it to create local.sqlite from the schema.sql before building the rest of the project.
 rusqlite = { version = "*", optional = true }
+sha2 = "0.10.6"
+digest = "0.10.6"
+uuid = "1"
