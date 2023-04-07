@@ -25,6 +25,8 @@ pub async fn login(
     mut database: Connection<Sqlite>,
     credentials: Form<UserCredentials<'_>>,
 ) -> crate::Result<Redirect> {
+
+
     let user_id =
         sqlx::query_as("SELECT sid FROM Site_users WHERE email = ? AND password_hash = ?")
             .bind(credentials.email)
@@ -50,6 +52,9 @@ pub async fn register(
     mut database: Connection<Sqlite>,
     credentials: Form<UserCredentials<'_>>,
 ) -> crate::Result<Redirect> {
+    // Some funny notes:
+    // * When you register, you automatically are logged in( I didnt intend
+    // to do that) 
     if !credentials.is_valid_email() {
         return Err(Error::from("Email must be a valid email address"));
     }
