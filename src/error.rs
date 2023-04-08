@@ -12,6 +12,7 @@ pub type MixedResult<T> = Result<T, Error>;
 pub enum Error {
     BadRequest(Cow<'static, str>),
     SqlError(sqlx::Error),
+    ScraperError(reqwest::Error),
 }
 
 impl<'r, 'o: 'r> Responder<'r, 'o> for Error {
@@ -27,6 +28,19 @@ impl<'r, 'o: 'r> Responder<'r, 'o> for Error {
                     err
                 );
                 Err(Status::InternalServerError)
+            }
+            Error::ScraperError(err) => {
+                error!(
+                    "{} {}: Encountered scraper error: {}",
+                    request.method(),
+                    request.uri().path(),
+                    err
+                );
+                (
+                    Status::InternalServerError,
+                    "An error occurred while communicating with Amazon",
+                )
+                    .respond_to(request)
             }
         }
     }
@@ -47,5 +61,11 @@ impl From<&'static str> for Error {
 impl From<String> for Error {
     fn from(error: String) -> Self {
         Error::BadRequest(Cow::from(error))
+    }
+}
+
+impl From<reqwest::Error> for Error {
+    fn from(error: reqwest::Error) -> Self {
+        Error::ScraperError(error)
     }
 }

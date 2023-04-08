@@ -4,13 +4,14 @@ use regex::Regex;
 mod api;
 pub mod offer;
 pub mod price;
+pub mod product;
 mod rate_limit;
 
 pub use api::AmazonApi;
 
 pub fn extract_asin(url: &str) -> Option<&str> {
     lazy_static! {
-        static ref ASIN_REGEX: Regex = Regex::new(r"/dp/([\dA-Z]+)/*[^/]*?$").unwrap();
+        static ref ASIN_REGEX: Regex = Regex::new(r"/dp/([\dA-Z]{10})/*[^/]*?$").unwrap();
     }
 
     Some(ASIN_REGEX.captures(url)?.get(1)?.as_str())

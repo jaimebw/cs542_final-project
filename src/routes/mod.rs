@@ -3,6 +3,7 @@ use rocket::{routes, Build, Rocket};
 pub mod render_routes;
 pub mod user;
 
+mod products;
 #[cfg(test)]
 mod tests;
 
@@ -20,6 +21,16 @@ pub fn build_app() -> Rocket<Build> {
                 render_routes::login_page,
                 render_routes::signup_page,
                 render_routes::about_page
+            ],
+        )
+        .mount(
+            "/product",
+            routes![
+                products::add_product,
+                products::remove_product,
+                products::update_now,
+                products::tracked_product_list,
+                products::product_info,
             ],
         )
 }

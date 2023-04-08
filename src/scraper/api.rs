@@ -1,4 +1,5 @@
 use crate::scraper::offer::Offer;
+use crate::scraper::product::Product;
 use crate::scraper::rate_limit::RateLimit;
 use futures::{stream, StreamExt};
 use html5ever::tendril::ByteTendril;
@@ -6,7 +7,7 @@ use log::{error, warn};
 use reqwest::header::CONTENT_TYPE;
 use reqwest::{Client, IntoUrl};
 use select::document::Document;
-use select::predicate::{Attr, Text};
+use select::predicate::{Attr, Name, Text};
 use std::str::FromStr;
 use std::time::Duration;
 
@@ -45,22 +46,50 @@ impl AmazonApi {
             return Ok(Document::from(response.text().await?.as_str()));
         }
 
-        let mut tendril = ByteTendril::new();
+        struct UnsafeSend(ByteTendril);
+
+        /// # Safety
+        /// By default, tendrils do not implement Send when non-atomic. This is because they are
+        /// internally reference counted so sending a non-atomic tendril to another thread could
+        /// result in synchronous access leading to undefined behavior.
+        ///
+        /// However, a non-atomic tendril can be safely passed to another thread so long as it stays
+        /// on a single thread.
+        unsafe impl Send for UnsafeSend {}
+
+        let mut tendril = UnsafeSend(ByteTendril::new());
         if let Some(length) = response.content_length() {
-            tendril.reserve(length as u32);
+            tendril.0.reserve(length as u32);
         }
 
         while let Some(chunk) = response.chunk().await? {
-            tendril.push_slice(&*chunk);
+            tendril.0.push_slice(&*chunk);
         }
 
-        match tendril.try_reinterpret() {
+        match tendril.0.try_reinterpret() {
             Ok(str_tendril) => Ok(Document::from(str_tendril)),
             Err(tendril) => {
                 error!("Request with Content-Type=UTF-8 contained non-utf8 data, performing lossy conversion");
                 Ok(Document::from(&*String::from_utf8_lossy(&tendril)))
             }
         }
+    }
+
+    pub async fn is_valid_asin(&self, asin: &str) -> reqwest::Result<bool> {
+        if !asin.chars().all(char::is_alphanumeric) {
+            return Ok(false);
+        }
+
+        let url = format!("https://www.amazon.com/dp/{}", asin);
+        let document = self.get_text(url).await?;
+
+        let is_not_found = document
+            .find(Name("title"))
+            .flat_map(|node| node.find(Text))
+            .filter_map(|node| node.as_text())
+            .any(|text| text.trim() == "Page Not Found");
+
+        Ok(!is_not_found)
     }
 
     pub async fn get_offer_page(&self, asin: &str, page: u32) -> reqwest::Result<Document> {
@@ -75,37 +104,46 @@ impl AmazonApi {
         self.get_text(url).await
     }
 
+    pub async fn get_product_info(&self, asin: &str) -> reqwest::Result<Option<Product>> {
+        let url = format!("https://www.amazon.com/dp/{}", asin);
+        let document = self.get_text(url).await?;
+
+        Ok(Product::try_from(&document).ok())
+    }
+
     pub async fn get_offers_for_asin(&self, asin: &str) -> reqwest::Result<Vec<Offer>> {
         const OFFERS_PER_PAGE: u32 = 10;
 
-        let first_page = self.get_offer_page(asin, 1).await?;
-
-        let total_offers = first_page
-            .find(Attr("id", "aod-filter-offer-count-string"))
-            .flat_map(|node| node.find(Text))
-            .filter_map(|node| node.as_text())
-            .filter_map(|s| {
-                // We are expecting a string of the form "123 options"
-                u32::from_str(s.strip_suffix(" options")?).ok()
-            })
-            .next();
-
-        let total_offers = match total_offers {
-            Some(n) => n,
-            None => {
-                warn!("Failed to find offer count for item {}. Either no offers are present or an error may have occurred.", asin);
-                return Ok(Vec::new());
-            }
-        };
-
         let mut offer_list = Vec::new();
 
-        for node in first_page.find(Attr("id", "aod-offer")) {
-            match Offer::try_from(node) {
-                Ok(offer) => offer_list.push(offer),
-                Err(err) => warn!("Failed to parse offer for item {}: {:?}", asin, err),
+        let total_offers = {
+            let first_page = self.get_offer_page(asin, 1).await?;
+
+            for node in first_page.find(Attr("id", "aod-offer")) {
+                match Offer::try_from(node) {
+                    Ok(offer) => offer_list.push(offer),
+                    Err(err) => warn!("Failed to parse offer for item {}: {:?}", asin, err),
+                }
             }
-        }
+
+            let total_offers = first_page
+                .find(Attr("id", "aod-filter-offer-count-string"))
+                .flat_map(|node| node.find(Text))
+                .filter_map(|node| node.as_text())
+                .filter_map(|s| {
+                    // We are expecting a string of the form "123 options"
+                    u32::from_str(s.strip_suffix(" options")?).ok()
+                })
+                .next();
+
+            match total_offers {
+                Some(n) => n,
+                None => {
+                    warn!("Failed to find offer count for item {}. Either no offers are present or an error may have occurred.", asin);
+                    return Ok(Vec::new());
+                }
+            }
+        };
 
         let num_offer_pages = (total_offers + OFFERS_PER_PAGE - 1) / OFFERS_PER_PAGE;
 
