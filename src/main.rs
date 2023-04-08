@@ -3,6 +3,7 @@ use log::{error, warn, LevelFilter};
 use rocket::{Build, Rocket};
 use rocket_dyn_templates::Template;
 
+use crate::scraper::AmazonApi;
 use crate::templates::{setup_template_loader, TemplateUrlLoader};
 use error::MixedResult as Result;
 
@@ -11,6 +12,7 @@ mod env;
 mod error;
 mod forms;
 mod routes;
+mod scraper;
 mod session;
 mod templates;
 
@@ -55,7 +57,9 @@ async fn build_rocket() -> AnyResult<Rocket<Build>> {
         Ok(())
     });
 
-    Ok(app.attach(templates).manage(pool))
+    let amazon_api = AmazonApi::default();
+
+    Ok(app.attach(templates).manage(pool).manage(amazon_api))
 }
 
 fn setup_logging() {
