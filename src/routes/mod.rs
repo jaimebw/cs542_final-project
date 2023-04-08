@@ -26,6 +26,7 @@ pub fn build_app() -> Rocket<Build> {
                 render_routes::about_page
             ],
         )
+
         .mount(
             "/product",
             routes![
@@ -36,6 +37,7 @@ pub fn build_app() -> Rocket<Build> {
                 products::product_info,
             ],
         )
+
 }
 
 #[get("/cart.json")]
