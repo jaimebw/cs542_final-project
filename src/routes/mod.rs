@@ -1,8 +1,10 @@
-use rocket::{routes, Build, Rocket,get};
+use rocket::{routes, Build, Rocket,get,catchers};
+
 
 
 pub mod render_routes;
 pub mod user;
+pub mod errors;
 
 mod products;
 #[cfg(test)]
@@ -13,6 +15,7 @@ pub fn build_app() -> Rocket<Build> {
     rocket::build()
         .mount("/",
                routes![cart_json])
+        .register("/", catchers![errors::not_found])
         .mount(
             "/",
             routes![user::index, user::register, user::logout, user::login],

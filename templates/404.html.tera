@@ -1,0 +1,10 @@
+{% extends "base" %}
+
+{% block title %}Page Not Found{% endblock %}
+
+{% block content %}
+  <h1>404 Error: Page Not Found</h1>
+  <p>We're sorry, the page you requested could not be found.</p>
+  <p>If you are not already logged in, you can <a href="/login">login here</a>.</p>
+{% endblock %}
+
