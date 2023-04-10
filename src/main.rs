@@ -67,7 +67,7 @@ fn setup_logging() {
         .format_timestamp(None)
         .filter_level(LevelFilter::Debug)
         .filter_module("selectors", LevelFilter::Info)
-        .filter_module("html5ever", LevelFilter::Warn)
+        .filter_module("html5ever", LevelFilter::Error)
         .filter_module("hyper", LevelFilter::Warn)
         .filter_module("reqwest", LevelFilter::Warn)
         .filter_module("cookie_store", LevelFilter::Warn)

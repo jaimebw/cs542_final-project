@@ -16,15 +16,15 @@ pub struct Product {
 }
 
 impl<'a> TryFrom<&'a Document> for Product {
-    type Error = ItemNotfound;
+    type Error = MissingField;
 
     fn try_from(document: &'a Document) -> Result<Self, Self::Error> {
         let asin = read_product_info(document, "ASIN")
-            .ok_or(ItemNotfound)?
+            .ok_or(MissingField("asin"))?
             .to_string();
 
         let manufacturer = read_product_info(document, "Manufacturer")
-            .ok_or(ItemNotfound)?
+            .ok_or(MissingField("manufacturer"))?
             .to_string();
 
         let department = DepartmentHierarchy::try_from(document)?;
@@ -35,7 +35,7 @@ impl<'a> TryFrom<&'a Document> for Product {
             .filter_map(|node| node.as_text())
             .map(|text| text.trim())
             .next()
-            .ok_or(ItemNotfound)?
+            .ok_or(MissingField("name"))?
             .to_string();
 
         Ok(Product {
@@ -48,7 +48,8 @@ impl<'a> TryFrom<&'a Document> for Product {
 }
 
 fn read_product_info<'a>(node: &'a Document, key: &str) -> Option<&'a str> {
-    node.find(Attr("id", "productDetails_detailBullets_sections1"))
+    node.find(Attr("id", "productDetails_techSpec_section_1"))
+        .chain(node.find(Attr("id", "productDetails_detailBullets_sections1")))
         .flat_map(|node| node.find(Name("tr")))
         .filter(|node| {
             node.find(Name("th"))
@@ -65,7 +66,7 @@ fn read_product_info<'a>(node: &'a Document, key: &str) -> Option<&'a str> {
 }
 
 #[derive(Debug)]
-pub struct ItemNotfound;
+pub struct MissingField(&'static str);
 
 #[derive(Serialize)]
 pub struct Department {
@@ -80,20 +81,20 @@ impl Department {
 }
 
 impl<'a> TryFrom<Node<'a>> for Department {
-    type Error = ItemNotfound;
+    type Error = MissingField;
 
     fn try_from(value: Node<'a>) -> Result<Self, Self::Error> {
         lazy_static! {
             static ref NODE_REGEX: Regex = Regex::new(r"[?&]node=(\d+)$").unwrap();
         }
 
-        let href = value.attr("href").ok_or(ItemNotfound)?;
+        let href = value.attr("href").ok_or(MissingField("department_node"))?;
 
         let node = NODE_REGEX
             .captures(href)
             .and_then(|matches| matches.get(1))
             .and_then(|node| node.as_str().parse::<u64>().ok())
-            .ok_or(ItemNotfound)?;
+            .ok_or(MissingField("department_name"))?;
 
         Ok(Department {
             name: value.inner_html().trim().to_string(),
@@ -108,7 +109,7 @@ pub struct DepartmentHierarchy {
 }
 
 impl<'a> TryFrom<&'a Document> for DepartmentHierarchy {
-    type Error = ItemNotfound;
+    type Error = MissingField;
 
     fn try_from(value: &'a Document) -> Result<Self, Self::Error> {
         Ok(DepartmentHierarchy {
