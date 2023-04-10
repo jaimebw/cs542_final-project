@@ -1,10 +1,13 @@
 use crate::database::Connection;
+use rocket_dyn_templates::{context};
 use crate::error::Error;
 use crate::scraper::{extract_asin, AmazonApi};
 use crate::session::UserId;
 use rocket::{get, State};
 use rocket_dyn_templates::Template;
 use sqlx::Sqlite;
+use rocket::serde::json::json;
+use log::info;
 
 #[get("/add?<url>")]
 pub async fn add_product(
@@ -12,23 +15,46 @@ pub async fn add_product(
     mut database: Connection<Sqlite>,
     amazon_api: &State<AmazonApi>,
     url: &str,
-) -> crate::Result<Template> {
+) -> crate::Result<Template>{
+    // This method should results in adding the product information to the database
+    // There should be no template as response
+    //
+    info!("The requested URL is \n {}",&url);
     let asin = match extract_asin(url) {
         Some(asin) => asin.to_ascii_uppercase(),
         None => return Err(Error::from("Requested link must be an amazon URL")),
     };
 
-    let product = match amazon_api.get_product_info(&asin).await? {
-        Some(product) => product,
-        None => return Err(Error::from("Unable to find the selected product")),
+    /*
+use std::time::Duration;
+use tokio::time::timeout;
+    info!("ASIN: {}",&asin);
+    let product = match timeout(Duration::from_secs(5), amazon_api.get_product_info(&asin)).await {
+        Ok(result) => result?,
+        Err(_) => return Err("Timeout waiting for product information".into()),
     };
+    */
+    let product = match amazon_api.get_product_info(&asin).await? {
+        Some(product) => {
+            info!("{}",&product.name);
+            product},
+        None => {
+            info!("No products found");
+            return Err(Error::from("Unable to find the selected product"))},
+    };
+    
 
     // TODO: Add product to the database if it is not already there
     // TODO: Add product to user's tracked product list
     // TODO: Return a template for the reloaded page
 
     // Get the user's product list with the newly updated entry
-    tracked_product_list(user, database).await
+    //tracked_product_list(user, database).await
+    Ok(Template::render("index", context!{
+        product:json!(product)
+
+    }))
+    
 }
 
 #[get("/remove?<asin>")]

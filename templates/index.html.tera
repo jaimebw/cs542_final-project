@@ -3,13 +3,13 @@
 {% block title %}Index{% endblock title %}
 {% block content %}
 	<div class="container mt-4">
-		<form class="form-inline">
+		<form action= "/product/add" method="get" class="form-inline">
 			<div class="form-group">
-				<label for="amazon-url" class="form-label mr-3">Enter Amazon URL:</label>
-				<input type="text" class="form-control mr-3" id="amazon-url" name="amazon-url">
+				<label for="url" class="form-label mr-3">Enter Amazon URL:</label>
+				<input type="text" class="form-control mr-3" id="url" name="url" required>
 			</div>
 			<div class="form-group">
-				<button type="button" class="btn btn-primary" id="load-products-btn">Enter Products</button>
+				<button type="submit" class="btn btn-primary" id="load-products-btn">Enter Products</button>
 			</div>
 		</form>
 	</div>
@@ -17,6 +17,7 @@
     <h1> Your tracked Amazon products </h1>
 		<!-- Products will be loaded here -->
 		<!-- Test example-->
+        {% if product %}
         <div id="product-list" class="container mt-4">
 		<table class="table">
 			<thead>
@@ -28,16 +29,8 @@
 			</thead>
 			<tbody>
 				<tr>
-					<td>Product 1</td>
-					<td>ASIN 123</td>
-					<td>
-						<button type="button" class="btn btn-success">Upgrade</button>
-						<button type="button" class="btn btn-danger">Delete</button>
-					</td>
-				</tr>
-				<tr>
-					<td>Product 2</td>
-					<td>ASIN 456</td>
+					<td>{{product.name}}</td>
+					<td>{{product.asin}}</td>
 					<td>
 						<button type="button" class="btn btn-success">Upgrade</button>
 						<button type="button" class="btn btn-danger">Delete</button>
@@ -46,6 +39,9 @@
 				<!-- Add more rows for additional products as needed -->
 			</tbody>
 		</table>
+        {% else %}
+        <td colspan="3">No products found.</td>
+	    {% endif %}
 	</div>
 
 	</div>

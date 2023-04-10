@@ -4,7 +4,10 @@ use select::document::Document;
 use select::node::Node;
 use select::predicate::{Attr, Name, Text};
 use std::ops::Deref;
+use serde::Serialize;
 
+
+#[derive(Serialize)]
 pub struct Product {
     pub asin: String,
     pub name: String,
@@ -64,6 +67,7 @@ fn read_product_info<'a>(node: &'a Document, key: &str) -> Option<&'a str> {
 #[derive(Debug)]
 pub struct ItemNotfound;
 
+#[derive(Serialize)]
 pub struct Department {
     pub name: String,
     pub node: u64,
@@ -98,6 +102,7 @@ impl<'a> TryFrom<Node<'a>> for Department {
     }
 }
 
+#[derive(Serialize)]
 pub struct DepartmentHierarchy {
     departments: Vec<Department>,
 }
