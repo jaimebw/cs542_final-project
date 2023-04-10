@@ -108,7 +108,12 @@ impl AmazonApi {
         let url = format!("https://www.amazon.com/dp/{}", asin);
         let document = self.get_text(url).await?;
 
-        Ok(Product::try_from(&document).ok())
+        let product = Product::try_from(&document);
+        if let Err(e) = &product {
+            error!("Got error while parsing product: {:?}", e);
+        }
+
+        Ok(product.ok())
     }
 
     pub async fn get_offers_for_asin(&self, asin: &str) -> reqwest::Result<Vec<Offer>> {

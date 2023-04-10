@@ -48,3 +48,9 @@ impl<'a> UserCredentials<'a> {
         hasher.finalize().into()
     }
 }
+
+#[derive(FromForm, Serialize, Deserialize)]
+pub struct AmazonURLForm<'a> {
+    /// Form for logging in the web app
+    pub url: &'a str,
+}
