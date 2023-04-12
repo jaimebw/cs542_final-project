@@ -1,4 +1,5 @@
 use crate::database::Connection;
+use rocket::response::{Flash, Redirect};
 use rocket_dyn_templates::{context};
 use crate::error::Error;
 use crate::scraper::{extract_asin, AmazonApi};
@@ -8,6 +9,10 @@ use rocket_dyn_templates::Template;
 use sqlx::Sqlite;
 use rocket::serde::json::json;
 use log::info;
+use rocket::request::FlashMessage;
+
+
+
 
 #[get("/add?<url>")]
 pub async fn add_product(
@@ -20,28 +25,34 @@ pub async fn add_product(
     // There should be no template as response
     //
     info!("The requested URL is \n {}",&url);
+
+    // Logic of the request:
+    //  1. Get the ASIN number
+    //      1.1 If error -> Flash not found product 
+    //  2. Get product info with ASIN
+    //      2.1 If error -> Flash not found product
+    //      2.2 No SQL INSERT operation
+    //  3. SQL Insert into db 
+    //  4. Render template with the update list of products
+
     let asin = match extract_asin(url) {
         Some(asin) => asin.to_ascii_uppercase(),
-        None => return Err(Error::from("Requested link must be an amazon URL")),
+        None => {
+        let flash= Flash::error(Redirect::to("/index"), "Product not found");
+        return Err(Error::FlashError(flash))}
     };
 
-    /*
-use std::time::Duration;
-use tokio::time::timeout;
-    info!("ASIN: {}",&asin);
-    let product = match timeout(Duration::from_secs(5), amazon_api.get_product_info(&asin)).await {
-        Ok(result) => result?,
-        Err(_) => return Err("Timeout waiting for product information".into()),
-    };
-    */
     let product = match amazon_api.get_product_info(&asin).await? {
         Some(product) => {
             info!("{}",&product.name);
             product},
+
         None => {
             info!("No products found");
-            return Err(Error::from("Unable to find the selected product"))},
+        let flash= Flash::error(Redirect::to("/index"), "Product not found");
+        return Err(Error::FlashError(flash))}
     };
+    
     
 
     // TODO: Add product to the database if it is not already there
@@ -51,7 +62,9 @@ use tokio::time::timeout;
     // Get the user's product list with the newly updated entry
     //tracked_product_list(user, database).await
     Ok(Template::render("index", context!{
-        product:json!(product)
+        product:json!({
+                    "product":product,
+                    })
 
     }))
     

@@ -2,6 +2,11 @@
 
 {% block content %}
     <h1>Register</h1>
+         {% if flash %}
+            <p class="{{ flash.0 }}-flash">
+                {{ flash.1 }}
+            </p>
+        {% endif %}
     <form action="/register" method="post">
         <div class="mb-3">
             <label for="inputName" class="form-label">Name</label>

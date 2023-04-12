@@ -3,6 +3,11 @@
 {% block title %}Index{% endblock title %}
 {% block content %}
 	<div class="container mt-4">
+        {% if flash %}
+            <p class="{{ flash.0 }}-flash">
+                {{ flash.1 }}
+            </p>
+        {% endif %}
 		<form action= "/product/add" method="get" class="form-inline">
 			<div class="form-group">
 				<label for="url" class="form-label mr-3">Enter Amazon URL:</label>

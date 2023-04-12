@@ -4,7 +4,7 @@ use crate::forms::UserCredentials;
 use crate::session::Session;
 use log::info;
 use rocket::form::Form;
-use rocket::response::Redirect;
+use rocket::response::{Redirect,Flash};
 use rocket::{get, post};
 use sqlx::types::Uuid;
 use sqlx::Sqlite;
@@ -18,13 +18,13 @@ pub async fn index(session: Session<'_>) -> crate::Result<Redirect> {
         Ok(Redirect::to("/index"))
     }
 }
-
+    // TO-DO: this erro should be flashed in the html
 #[post("/login", data = "<credentials>")]
 pub async fn login(
     session: Session<'_>,
     mut database: Connection<Sqlite>,
     credentials: Form<UserCredentials<'_>>,
-) -> crate::Result<Redirect> {
+) -> crate::Result<Flash<Redirect>> {
 
 
     let user_id =
@@ -37,12 +37,12 @@ pub async fn login(
     match user_id {
         Some((id,)) => {
             session.set_user_id(id);
-            Ok(Redirect::to("/index"))
+            Ok(Flash::success(Redirect::to("/index"),"Succesfully logged in"))
         }
         // TO-DO:
         // 1. Add a flash error message
         //  2. Add logging to this too
-        None => Ok(Redirect::to("/login")),
+        None => Ok(Flash::success(Redirect::to("/login"), "Incorrect password/user"))
     }
 }
 
@@ -51,16 +51,17 @@ pub async fn register(
     session: Session<'_>,
     mut database: Connection<Sqlite>,
     credentials: Form<UserCredentials<'_>>,
-) -> crate::Result<Redirect> {
+) -> crate::Result<Flash<Redirect>> {
     // Some funny notes:
     // * When you register, you automatically are logged in( I didnt intend
     // to do that) 
     if !credentials.is_valid_email() {
         return Err(Error::from("Email must be a valid email address"));
     }
-
+    // TO-DO: this erro should be flashed in the html
     if let Some(issue) = credentials.check_password_for_issues() {
         return Err(Error::from(issue));
+
     }
 
     let (user_exists,) = sqlx::query_as("SELECT EXISTS(SELECT 1 FROM Site_users WHERE email = ?)")
@@ -86,11 +87,11 @@ pub async fn register(
         .await?;
 
     session.set_user_id(new_user_id);
-    Ok(Redirect::to("/login"))
+    Ok(Flash::success(Redirect::to("/login"),"Succesfully registed"))
 }
 
 #[get("/logout")]
-pub async fn logout(session: Session<'_>) -> crate::Result<Redirect> {
+pub async fn logout(session: Session<'_>) -> crate::Result<Flash<Redirect>> {
     session.remove_user_id();
-    Ok(Redirect::to("/login"))
+    Ok(Flash::success(Redirect::to("/login"), "Logged out succesfully!"))
 }

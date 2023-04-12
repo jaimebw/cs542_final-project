@@ -3,6 +3,7 @@ use rocket::http::Status;
 use rocket::response::Responder;
 use rocket::Request;
 use std::borrow::Cow;
+use rocket::response::{Flash,Redirect};
 
 pub type MixedResult<T> = Result<T, Error>;
 
@@ -13,6 +14,7 @@ pub enum Error {
     BadRequest(Cow<'static, str>),
     SqlError(sqlx::Error),
     ScraperError(reqwest::Error),
+    FlashError(Flash<Redirect>),
 }
 
 impl<'r, 'o: 'r> Responder<'r, 'o> for Error {
@@ -42,6 +44,7 @@ impl<'r, 'o: 'r> Responder<'r, 'o> for Error {
                 )
                     .respond_to(request)
             }
+            Error::FlashError(err) => err.respond_to(request),
         }
     }
 }
@@ -69,3 +72,11 @@ impl From<reqwest::Error> for Error {
         Error::ScraperError(error)
     }
 }
+
+
+impl From<Flash<Redirect>> for Error {
+    fn from(error: Flash<Redirect>) -> Self {
+        Error::FlashError(error)
+    }
+}
+

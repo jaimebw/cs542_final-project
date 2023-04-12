@@ -5,6 +5,11 @@
         <div class="text-center">
             <h1>Sign In</h1>
         </div>
+         {% if flash %}
+            <p class="{{ flash.0 }}-flash">
+                {{ flash.1 }}
+            </p>
+        {% endif %}
         <form action="/login" method="post">
             <div class="form-group">
                 <label for="email">Email:</label>
