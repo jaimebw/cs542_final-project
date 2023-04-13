@@ -39,9 +39,6 @@ pub async fn login(
             session.set_user_id(id);
             Ok(Flash::success(Redirect::to("/index"),"Succesfully logged in"))
         }
-        // TO-DO:
-        // 1. Add a flash error message
-        //  2. Add logging to this too
         None => Ok(Flash::success(Redirect::to("/login"), "Incorrect password/user"))
     }
 }

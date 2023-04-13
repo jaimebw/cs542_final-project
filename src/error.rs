@@ -4,6 +4,7 @@ use rocket::response::Responder;
 use rocket::Request;
 use std::borrow::Cow;
 use rocket::response::{Flash,Redirect};
+use rocket_dyn_templates::Template;
 
 pub type MixedResult<T> = Result<T, Error>;
 
@@ -15,6 +16,7 @@ pub enum Error {
     SqlError(sqlx::Error),
     ScraperError(reqwest::Error),
     FlashError(Flash<Redirect>),
+    TemplateError(Template)
 }
 
 impl<'r, 'o: 'r> Responder<'r, 'o> for Error {
@@ -30,7 +32,7 @@ impl<'r, 'o: 'r> Responder<'r, 'o> for Error {
                     err
                 );
                 Err(Status::InternalServerError)
-            }
+            },
             Error::ScraperError(err) => {
                 error!(
                     "{} {}: Encountered scraper error: {}",
@@ -43,10 +45,12 @@ impl<'r, 'o: 'r> Responder<'r, 'o> for Error {
                     "An error occurred while communicating with Amazon",
                 )
                     .respond_to(request)
-            }
+            },
             Error::FlashError(err) => err.respond_to(request),
+            Error::TemplateError(err) => (Status::BadRequest,err).respond_to(request),
         }
-    }
+    
+}
 }
 
 impl From<sqlx::Error> for Error {
@@ -73,6 +77,11 @@ impl From<reqwest::Error> for Error {
     }
 }
 
+impl From<Template> for Error {
+    fn from(error: Template) -> Self {
+        Error::TemplateError(error)
+    }
+}
 
 impl From<Flash<Redirect>> for Error {
     fn from(error: Flash<Redirect>) -> Self {
