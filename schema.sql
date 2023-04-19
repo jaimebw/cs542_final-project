@@ -72,7 +72,7 @@ CREATE TABLE Subscribes_To
     ASIN       CHAR(10),
     sid        BINARY(16),
     Primary Key (conditions, ASIN, sid),
-    FOREIGN Key (conditions, ASIN) REFERENCES Deal_Alert_on (conditions, ASIN),
+    FOREIGN Key (conditions, ASIN) REFERENCES Deal_Alert_on (conditions, ASIN) ON DELETE CASCADE,
     FOREIGN Key (sid) REFERENCES Site_users (sid)
 );
 
@@ -109,7 +109,7 @@ CREATE TABLE For_Product_Data_Refresh
     datetime date,
     ASIN     CHAR(10),
     Primary Key (datetime),
-    Foreign Key (ASIN) REFERENCES Product_variant_Sold (ASIN)
+    Foreign Key (ASIN) REFERENCES Product_variant_Sold (ASIN) ON DELETE CASCADE
 );
 
 CREATE TABLE Company
