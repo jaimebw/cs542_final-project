@@ -12,22 +12,22 @@ CREATE TABLE Site_users
 CREATE TABLE Department
 (
     DepID BINARY(16),
-    name  CHAR(20),
+    name  VARCHAR(255) UNIQUE,
     PRIMARY KEY (DepID)
 );
 
 CREATE TABLE Manufacturer
 (
     ManuID BINARY(16),
-    name   CHAR(20),
+    name   VARCHAR(255) UNIQUE,
     PRIMARY KEY (ManuID)
 );
 
 CREATE TABLE Sold_Product_Manufactured
 (
     PID    BINARY(16),
-    URL    CHAR(20),
-    name   CHAR(20),
+    URL    VARCHAR(1024),
+    name   VARCHAR(1024),
     DepID  BINARY(16) NOT NULL,
     ManuID BINARY(16) NOT NULL,
     Primary Key (PID),
@@ -47,8 +47,8 @@ CREATE TABLE Tracks
 CREATE TABLE Product_variant_Sold
 (
     ASIN      CHAR(10),
-    variation CHAR(20),
-    type      CHAR(20),
+    variation VARCHAR(255),
+    type      VARCHAR(255),
     PID       BINARY(16) NOT NULL,
     PRIMARY KEY (ASIN),
     FOREIGN KEY (PID) REFERENCES Sold_Product_Manufactured (PID)
