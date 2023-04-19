@@ -1,4 +1,5 @@
 use crate::database::Connection;
+use crate::session::Session;
 use rocket::response::{Flash, Redirect};
 use crate::error::Error;
 use crate::scraper::{extract_asin, AmazonApi};
@@ -13,6 +14,7 @@ use log::info;
 
 #[get("/add?<url>")]
 pub async fn add_product(
+    session: Session<'_>,
     mut database: Connection<Sqlite>,
     amazon_api: &State<AmazonApi>,
     url: &str,
@@ -29,6 +31,8 @@ pub async fn add_product(
     //      2.1 If error -> Flash not found product
     //      2.2 No SQL INSERT operation
     //  3. SQL Insert into db 
+
+
     let mut flash = Flash::success(Redirect::to("/index"), "Added product!");
 
     let asin = match extract_asin(url) {
@@ -54,6 +58,9 @@ pub async fn add_product(
     // TODO: INSERT Query here
     // TODO: see how the product variable transform to a json to introduce it inside the INSERT
     // operation
+    //
+    //sqlx::query_as::<_, Product>("INSERT INTO ")
+
 
     Ok(Flash::success(Redirect::to("/index"),"Added new product" ))
        
