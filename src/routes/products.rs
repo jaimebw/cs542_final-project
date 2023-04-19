@@ -1,5 +1,6 @@
 use crate::database::Connection;
 use crate::session::Session;
+use rocket::http::RawStr;
 use rocket::response::{Flash, Redirect};
 use crate::error::Error;
 use crate::scraper::{extract_asin, AmazonApi};
@@ -14,7 +15,7 @@ use log::info;
 
 #[get("/add?<url>")]
 pub async fn add_product(
-    session: Session<'_>,
+    user_id: UserId,
     mut database: Connection<Sqlite>,
     amazon_api: &State<AmazonApi>,
     url: &str,
@@ -69,13 +70,17 @@ pub async fn add_product(
 
 #[get("/remove?<asin>")]
 pub async fn remove_product(
-    user: UserId,
     mut database: Connection<Sqlite>,
     asin: &str,
-) -> crate::Result<Template> {
-    // TODO: Remove the product from the current user's tracked product list
-
-    tracked_product_list(user, database).await
+) -> crate::Result<Flash<Redirect>> {
+    // todo: remove the product from the current user's tracked product list
+    sqlx::query("DELETE from Product_variant_sold WHERE asin = ?")
+        .bind(asin)
+        .execute(&mut *database)
+        .await?;
+    info!("try to remove");
+    
+    Ok(Flash::success(Redirect::to("/index"),"deleted new product" ))
 }
 
 #[get("/update?<asin>")]

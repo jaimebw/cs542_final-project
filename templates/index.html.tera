@@ -38,8 +38,14 @@
                 <td>{{ product.conditions }}</td>
                 <td>{{ product.ASIN}}</td>
                 <td>
-                    <button type="button" class="btn btn-success">Upgrade</button>
-                    <button type="button" class="btn btn-danger">Delete</button>
+                    <form action="/product/update" method="get">
+                        <input type="hidden" name="asin" value="{{ product.ASIN }}">
+                        <button type="submit" class="btn btn-success">Update</button>
+                    </form>
+                    <form action="/product/remove" method="get">
+                        <input type="hidden" name="asin" value="{{ product.ASIN }}">
+                        <button type="submit" class="btn btn-danger">Remove</button>
+                    </form>
                 </td>
             </tr>
             {% endfor %}

@@ -43,7 +43,8 @@ pub async fn signup_page(session: Session<'_>,flash: Option<FlashMessage<'_>>) -
 }
 
 #[get("/index")]
-pub async fn index_page(session: Session<'_>,mut database: Connection<Sqlite>) -> crate::Result<Template> {
+pub async fn index_page(session: Session<'_>,mut database: Connection<Sqlite>,
+                        flash: Option<FlashMessage<'_>>) -> crate::Result<Template> {
     // Template render of the index
     if session.user_id().is_none() {
         Ok(Template::render("login", context! {}))
@@ -57,7 +58,8 @@ pub async fn index_page(session: Session<'_>,mut database: Connection<Sqlite>) -
             .await?;
 
         Ok(Template::render("index", context! {
-            products: &user_products
+            products: &user_products,
+            flash: flash.map(FlashMessage::into_inner)
         }))
     }
 }
