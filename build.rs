@@ -3,6 +3,7 @@ use sha2::{Digest, Sha256};
 use std::fs;
 use std::io::ErrorKind;
 use uuid::Uuid;
+use std::path::Path;
 
 const TEST_DATABASE: &str = "local.sqlite";
 
@@ -12,15 +13,29 @@ fn main() -> rusqlite::Result<()> {
     println!("cargo:rerun-if-changed=schema.sql");
 
     // Remove old database
+    if <str as AsRef<Path>>::as_ref(TEST_DATABASE).exists() {
+        let connection = Connection::open(TEST_DATABASE)?;
+        //connection.execute_batch(include_str!("schema.sql"))?;
+
+        // Add test users for convenience
+        add_test_data(&connection, "test@test.me", "12345678",
+                      "Cooldep1",
+                      "Acme",
+                      "www.lol.com","Super prod",
+                      "First var","Cool type",
+                      "AAAAAAAAAA","GOOD","Yesterday")?;
+        return Ok(())
+    }    
+
+
     match fs::remove_file(TEST_DATABASE) {
         Ok(_) => {}
         Err(e) if e.kind() == ErrorKind::NotFound => {}
         Err(e) => panic!("Unable to remove test database: {}", e),
     }
-
-    // Build new database based on the sql schema
+   
     let connection = Connection::open(TEST_DATABASE)?;
-    connection.execute_batch(include_str!("schema.sql"))?;
+    //connection.execute_batch(include_str!("schema.sql"))?;
 
     // Add test users for convenience
     add_test_data(&connection, "test@test.me", "12345678",
@@ -29,6 +44,8 @@ fn main() -> rusqlite::Result<()> {
                   "www.lol.com","Super prod",
                   "First var","Cool type",
                   "AAAAAAAAAA","GOOD","Yesterday")?;
+
+    // Build new database based on the sql schema
     //add_test_data(&connection, "a@b.c", "123","BBBBBBBBBB","BAD","TODAY")?;
 
     Ok(())
