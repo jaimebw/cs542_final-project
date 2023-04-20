@@ -53,7 +53,7 @@ CREATE TABLE Product_variant_Sold
     type      CHAR(20),
     PID       BINARY(16) NOT NULL,
     PRIMARY KEY (ASIN),
-    FOREIGN KEY (PID) REFERENCES Sold_Product_Manufactured (PID)
+    FOREIGN KEY (PID) REFERENCES Sold_Product_Manufactured (PID)ON DELETE CASCADE--add on delete cascade
 );
 
 
