@@ -5,10 +5,22 @@ import binascii
 import hashlib
 import random
 import string
+import shutil
+from pathlib import Path
+import os
 
 Faker.seed(42)
+NUMBER_OF_USERS = 10
 
 ## WIP
+def create_db():
+    if Path("local.sqlite").exists():
+        os.remove("local.sqlite")
+    conn = sqlite3.connect("local.sqlite")
+    with open("schema.sql") as f:
+        schema = f.read()
+        conn.executescript(schema)
+    return conn 
 
 def generate_asin():
     # Amazon ASINs are 10 characters long
@@ -28,8 +40,8 @@ def random_id():
     # Generate a random 16-byte (128-bit) binary ID
     binary_id = secrets.token_bytes(16)
     # Convert the binary ID to a hexadecimal string
-    hex_id = binascii.hexlify(binary_id).decode('utf-8')
-    return hex_id
+    #hex_id = binascii.hexlify(binary_id).decode('utf-8')
+    return binary_id
 
 
 def hash_password(password):
@@ -45,10 +57,10 @@ def hash_password(password):
 
 fake = Faker()
 
-conn = sqlite3.connect('local.sqlite')
+conn = create_db()
 cur = conn.cursor()
 
-for i in range(10):
+for i in range(NUMBER_OF_USERS):
     # Site_users
     sid = random_id()
     email = fake.email()
@@ -101,6 +113,7 @@ for i in range(10):
     cur.execute("INSERT INTO product_variant_sold(ASIN,variation,type,PID) \
             VALUES (?,?,?,?)",product_variant_sold)
     # Deal Alert on
+    # Change conditions to be random
     conditions = "none" # idk what to put here
     last_notification = fake.date()
     deal_alerts_on = [conditions,asin,last_notification]
@@ -115,9 +128,22 @@ for i in range(10):
     cur.execute("INSERT INTO Subscribes_To(conditions,ASIN,sid) \
             VALUES (?,?,?)", subscribes_to)
     # Area withing
-    cur.execute("INSERT INTO Are_within(sub_DepID,Category_DepID) \
+    cur.execute("INSERT INTO Area_within(sub_DepID,Category_DepID) \
             VALUES (?,?)", [depid,depid])
     # Contains reviews
+    rating = random.randint(1, 5) 
+    review_date  = fake.date()
+    contains_reviews = [asin,pid,rating,review_date]
+    cur.execute("INSERT INTO Contains_Reviews(ASIN,PID,rating,reviewdate)\
+            VALUES (?,?,?,?)",contains_reviews)
+    
+    # Ranked best seller rank
+    rank = str(random.randint(1,5))
+    category = random.choice(["House","Videogames","Kitchen"])
+    ranked_best = [rank,asin,category]
+    cur.execute("INSERT INTO Ranked_Best_Seller_Rank(rank,ASIN,category) \
+            VALUES (?,?,?)", ranked_best)
+    # For_Product_Data_Refres
 
 
 
