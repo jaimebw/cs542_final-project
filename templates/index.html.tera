@@ -22,26 +22,33 @@
     <h1> Your tracked Amazon products </h1>
 		<!-- Products will be loaded here -->
 		<!-- Test example-->
-        {% if product %}
+        {% if products %}
         <div id="product-list" class="container mt-4">
 		<table class="table">
 			<thead>
 				<tr>
-					<th>Product Name</th>
+					<th>Condition</th>
 					<th>ASIN Number</th>
 					<th>Actions</th>
 				</tr>
 			</thead>
 			<tbody>
-				<tr>
-					<td>{{product.name}}</td>
-					<td>{{product.asin}}</td>
-					<td>
-						<button type="button" class="btn btn-success">Upgrade</button>
-						<button type="button" class="btn btn-danger">Delete</button>
-					</td>
-				</tr>
-				<!-- Add more rows for additional products as needed -->
+            {% for product in products %}
+            <tr>
+                <td>{{ product.conditions }}</td>
+                <td>{{ product.ASIN}}</td>
+                <td>
+                    <form action="/product/update" method="get">
+                        <input type="hidden" name="asin" value="{{ product.ASIN }}">
+                        <button type="submit" class="btn btn-success">Update</button>
+                    </form>
+                    <form action="/product/remove" method="get">
+                        <input type="hidden" name="asin" value="{{ product.ASIN }}">
+                        <button type="submit" class="btn btn-danger">Remove</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
 			</tbody>
 		</table>
         {% else %}

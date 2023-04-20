@@ -1,26 +1,25 @@
 use crate::database::Connection;
+use crate::session::Session;
+use rocket::http::RawStr;
 use rocket::response::{Flash, Redirect};
-use rocket_dyn_templates::{context};
 use crate::error::Error;
 use crate::scraper::{extract_asin, AmazonApi};
 use crate::session::UserId;
 use rocket::{get, State};
 use rocket_dyn_templates::Template;
 use sqlx::Sqlite;
-use rocket::serde::json::json;
 use log::info;
-use rocket::request::FlashMessage;
 
 
 
 
 #[get("/add?<url>")]
 pub async fn add_product(
-    user: UserId,
+    user_id: UserId,
     mut database: Connection<Sqlite>,
     amazon_api: &State<AmazonApi>,
     url: &str,
-) -> crate::Result<Template>{
+) -> crate::Result<Flash<Redirect>>{
     // This method should results in adding the product information to the database
     // There should be no template as response
     //
@@ -33,52 +32,55 @@ pub async fn add_product(
     //      2.1 If error -> Flash not found product
     //      2.2 No SQL INSERT operation
     //  3. SQL Insert into db 
-    //  4. Render template with the update list of products
+
+
+    let mut flash = Flash::success(Redirect::to("/index"), "Added product!");
 
     let asin = match extract_asin(url) {
         Some(asin) => asin.to_ascii_uppercase(),
         None => {
-        let flash= Flash::error(Redirect::to("/index"), "Product not found");
-        return Err(Error::FlashError(flash))}
+            flash = Flash::error(Redirect::to("/index"), "Product not found");
+            return Err(Error::FlashError(flash));
+        }
     };
 
     let product = match amazon_api.get_product_info(&asin).await? {
         Some(product) => {
             info!("{}",&product.name);
-            product},
-
+            product
+        },
         None => {
             info!("No products found");
-        let flash= Flash::error(Redirect::to("/index"), "Product not found");
-        return Err(Error::FlashError(flash))}
+            flash = Flash::error(Redirect::to("/index"), "Product not found");
+            return Err(Error::FlashError(flash));
+        }
     };
-    
-    
 
-    // TODO: Add product to the database if it is not already there
-    // TODO: Add product to user's tracked product list
-    // TODO: Return a template for the reloaded page
+    // TODO: INSERT Query here
+    // TODO: see how the product variable transform to a json to introduce it inside the INSERT
+    // operation
+    //
+    //sqlx::query_as::<_, Product>("INSERT INTO ")
 
-    // Get the user's product list with the newly updated entry
-    //tracked_product_list(user, database).await
-    Ok(Template::render("index", context!{
-        product:json!({
-                    "product":product,
-                    })
 
-    }))
-    
+    Ok(Flash::success(Redirect::to("/index"),"Added new product" ))
+       
 }
+
 
 #[get("/remove?<asin>")]
 pub async fn remove_product(
-    user: UserId,
     mut database: Connection<Sqlite>,
     asin: &str,
-) -> crate::Result<Template> {
-    // TODO: Remove the product from the current user's tracked product list
-
-    tracked_product_list(user, database).await
+) -> crate::Result<Flash<Redirect>> {
+    // todo: remove the product from the current user's tracked product list
+    sqlx::query("DELETE from Product_variant_sold WHERE asin = ?")
+        .bind(asin)
+        .execute(&mut *database)
+        .await?;
+    info!("try to remove");
+    
+    Ok(Flash::success(Redirect::to("/index"),"deleted new product" ))
 }
 
 #[get("/update?<asin>")]

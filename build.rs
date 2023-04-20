@@ -23,8 +23,13 @@ fn main() -> rusqlite::Result<()> {
     connection.execute_batch(include_str!("schema.sql"))?;
 
     // Add test users for convenience
-    add_test_user(&connection, "test@test.me", "12345678")?;
-    add_test_user(&connection, "a@b.c", "123")?;
+    add_test_data(&connection, "test@test.me", "12345678",
+                  "Cooldep1",
+                  "Acme",
+                  "www.lol.com","Super prod",
+                  "First var","Cool type",
+                  "AAAAAAAAAA","GOOD","Yesterday")?;
+    //add_test_data(&connection, "a@b.c", "123","BBBBBBBBBB","BAD","TODAY")?;
 
     Ok(())
 }
@@ -39,11 +44,51 @@ fn password_hash(password: &str) -> [u8; 32] {
     hasher.finalize().into()
 }
 
-fn add_test_user(conn: &Connection, email: &str, password: &str) -> rusqlite::Result<()> {
+fn add_test_data(conn: &Connection, email: &str,password: &str,
+                 dep_name: &str,
+                 manu_name: &str,
+                 url: &str, product_name:&str,
+                 variation: &str, typep: &str,
+                 asin:&str, conditions: &str, last_notification: &str) -> rusqlite::Result<()> {
+    // Basic generation of test data for the
+    // INSERT INTO Deal_Alert_on VALUES (' ', ' ', ' ');
+    // INSERT INTO Subscribes_To VALUES (' ', ' ', ' ');
+    let user_id = Uuid::new_v4();
+    let dep_id = Uuid::new_v4();
+    let manu_id = Uuid::new_v4();
+    let pid_id = Uuid::new_v4();
+
+
     conn.execute(
         "INSERT INTO Site_users (sid, email, password_hash) VALUES (?, ?, ?)",
-        params![Uuid::new_v4().as_bytes(), email, password_hash(password)],
+        params![user_id.as_bytes(), email, password_hash(password)],
+    )?;
+    conn.execute(
+        "INSERT INTO Department (DepID, name) VALUES (?, ?)",
+        params![dep_id.as_bytes(), dep_name],
+    )?;
+    conn.execute(
+        "INSERT INTO Manufacturer (ManuID, name) VALUES (?, ?)",
+        params![manu_id.as_bytes(), manu_name],
     )?;
 
+    conn.execute(
+        "INSERT INTO Sold_Product_Manufactured (PID,URL,name,DepID,ManuID) VALUES (?, ?, ?, ?,?)",
+        params![pid_id.as_bytes(), url, product_name, dep_id.as_bytes(),manu_id.as_bytes()],
+    )?;
+
+    conn.execute(
+        "INSERT INTO Product_variant_Sold (ASIN,variation,type,PID) VALUES (?, ?, ?,?)",
+        params![asin, variation, typep, pid_id.as_bytes()], 
+    )?;
+
+    conn.execute(
+        "INSERT INTO Deal_Alert_on (conditions, ASIN, last_notification) VALUES (?, ?, ?)",
+        params![conditions,asin,last_notification]
+        )?;
+    conn.execute(
+        "INSERT INTO Subscribes_To (conditions, ASIN, sid) VALUES (?, ?, ?)",
+        params![conditions,asin,user_id.as_bytes()]
+        )?;
     Ok(())
 }
