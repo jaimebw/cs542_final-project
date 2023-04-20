@@ -6,6 +6,7 @@ CREATE TABLE Site_users
     sid           BINARY(16),
     email         VARCHAR(100),
     password_hash BINARY(32),
+    UNIQUE(email),--add UNIQUE(email)
     PRIMARY KEY (sid)
 );
 
@@ -31,6 +32,7 @@ CREATE TABLE Sold_Product_Manufactured
     DepID  BINARY(16) NOT NULL,
     ManuID BINARY(16) NOT NULL,
     Primary Key (PID),
+    UNIQUE(URL),--add UNIQUE(URL)
     Foreign Key (DepID) REFERENCES Department (DepID),
     Foreign Key (ManuID) REFERENCES Manufacturer (ManuID)
 );
@@ -87,11 +89,11 @@ CREATE TABLE Area_within
 
 CREATE TABLE Contains_Reviews
 (
-    amazonID   CHAR(10),
+    ASIN   CHAR(10),--change amazonID to ASIN
     PID        BINARY(16),
     rating     REAL,
     reviewdate DATE,
-    Primary Key (amazonID, PID),
+    Primary Key (ASIN, PID),
     FOREIGN KEY (PID) REFERENCES Sold_Product_Manufactured (PID) ON DELETE CASCADE
 );
 
