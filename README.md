@@ -7,5 +7,14 @@ git clone https://github.com/jmeggitt/cs542_final_project.git
 cd cs542_final_project
 cargo run
 ```
+## How to run the faking data scripts
+
+You need to install the Faker library. To do that run this:
+```bash
+pip install Faker
+python3 fake_data.py
+```
+
+
 
 
