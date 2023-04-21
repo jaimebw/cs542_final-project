@@ -74,6 +74,7 @@ CREATE TABLE Subscribes_To
     ASIN       CHAR(10),
     sid        BINARY(16),
     Primary Key (conditions, ASIN, sid),
+    Foreign Key (ASIN) REFERENCES Product_variant_Sold (ASIN) ON DELETE CASCADE,
     FOREIGN Key (conditions, ASIN) REFERENCES Deal_Alert_on (conditions, ASIN) ON DELETE CASCADE,
     FOREIGN Key (sid) REFERENCES Site_users (sid)
 );
@@ -94,6 +95,7 @@ CREATE TABLE Contains_Reviews
     rating     REAL,
     reviewdate DATE,
     Primary Key (ASIN, PID),
+    FOREIGN Key (ASIN) REFERENCES Product_variant_Sold (ASIN) ON DELETE CASCADE,
     FOREIGN KEY (PID) REFERENCES Sold_Product_Manufactured (PID) ON DELETE CASCADE
 );
 
@@ -132,7 +134,7 @@ CREATE TABLE Has_Listing_collected
     sold_ComID    BINARY(16) NOT NULL,
     Primary Key (ListingID, ASIN),
     Foreign Key (ASIN) REFERENCES Product_variant_Sold (ASIN) ON DELETE CASCADE,
-    Foreign Key (datetime) REFERENCES For_Product_Data_Refresh (datetime),
+    Foreign Key (ASIN,datetime) REFERENCES For_Product_Data_Refresh (ASIN,datetime) ON DELETE CASCADE,
     Foreign Key (shipped_comID) REFERENCES Company (ComID),
     Foreign Key (sold_ComID) REFERENCES Company (ComID)
 );
