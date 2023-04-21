@@ -110,7 +110,7 @@ CREATE TABLE For_Product_Data_Refresh
 (
     datetime date,
     ASIN     CHAR(10),
-    Primary Key (datetime),
+    Primary Key (datetime,ASIN),
     Foreign Key (ASIN) REFERENCES Product_variant_Sold (ASIN) ON DELETE CASCADE
 );
 
