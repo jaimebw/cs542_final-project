@@ -2,48 +2,54 @@
 
 {% block title %}Historic{% endblock title %}
 {% block content %}
-<div> id= "product_name"</div>
- <style>
-    #chart-container {
-      width: 80%;
-      height: 400px;
-      margin: 0 auto;
-    }
-  </style>
-<div id="chart-container">
-<canvas id="myChart"></canvas>
-</div>
+<div id="product_name">Product Name</div>
+<div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: calc(100vh - 100px);">
+  <button onclick="history.back()" class="btn btn-primary" style="align-self: flex-start; margin-left: 20px; margin-top: 20px;">Back</button>
+  <div>
+    <table>
+      <tr>
+        <td>Maximum price: $</td>
+        <td>{{max_price}}</td>
+      </tr>
+      <tr>
+        <td>Minimum price: $</td>
+        <td>{{min_price}}</td>
+      </tr>
+    </table>
+  </div>
+  <div style="margin-top: 20px;">
+    <canvas id="myChart" style="height: 400px; width: 80vw;"></canvas>
+  </div>
+</div> 
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4"></script>
-  <script>
-    var timestamps = {{ timestamps}};
-    var prices = {{ prices }};
-     var ctx = document.getElementById('myChart').getContext('2d');
-    var myChart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: timestamps,
-        datasets: [{
-          label: 'Prices',
-          data: prices,
-          backgroundColor: 'rgba(255, 99, 132, 0.2)',
-          borderColor: 'rgba(255, 99, 132, 1)',
-          borderWidth: 1
+<script>
+  var timestamps = {{ timestamps }};
+  var prices = {{ prices }};
+  var ctx = document.getElementById('myChart').getContext('2d');
+  var myChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: timestamps,
+      datasets: [{
+        label: 'Prices',
+        data: prices,
+        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+        borderColor: 'rgba(255, 99, 132, 1)',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      scales: {
+        yAxes: [{
+          ticks: {
+            beginAtZero: true
+          }
         }]
-      },
-      options: {
-        scales: {
-          yAxes: [{
-            ticks: {
-              beginAtZero: true
-            }
-          }]
-        }
       }
-    });
-      </script>
-
-
-
-
+    }
+  });
+</script>
 
 {% endblock %}
+

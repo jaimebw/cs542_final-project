@@ -25,21 +25,6 @@ impl ProductStory {
         (timestamps, prices)
     }
 }
-/*
-impl ProductStory {
-    fn to_vectors(&self) -> (Vec<String>, Vec<f32>) {
-        let mut timestamps = Vec::new();
-        let mut prices = Vec::new();
-
-        for entry in self.data.iter() {
-            timestamps.push(entry[1].clone());
-            prices.push(entry[0]);
-        }
-
-        (timestamps, prices)
-    }
-}
-*/
 
 
 #[get("/add?<url>")]
@@ -114,7 +99,11 @@ pub async fn historic(
         timestamps.extend(story_timestamps);
         prices.extend(story_prices);
     }
+    let max_price = prices.iter().fold(f32::NEG_INFINITY, |a, &b| a.max(b)); 
+    let min_price = prices.iter().fold(f32::INFINITY, |a, &b| a.min(b)); 
     Ok(Template::render("historic",context! {
+        max_price : &max_price,
+        min_price: &min_price,
        prices: &prices,
        timestamps: &timestamps
     }))

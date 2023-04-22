@@ -43,7 +43,7 @@
                 <td>
                     <form action="/product/historic" method="get">
                         <input type="hidden" name="asin" value="{{ product.ASIN }}">
-                        <button type="submit" class="btn btn-success">Historic</button>
+                        <button type="submit" class="btn btn-info">Historic</button>
                     </form>
                 </td>
                 <td>
