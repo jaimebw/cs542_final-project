@@ -1,0 +1,49 @@
+{% extends "base" %}
+
+{% block title %}Historic{% endblock title %}
+{% block content %}
+<div> id= "product_name"</div>
+ <style>
+    #chart-container {
+      width: 80%;
+      height: 400px;
+      margin: 0 auto;
+    }
+  </style>
+<div id="chart-container">
+<canvas id="myChart"></canvas>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4"></script>
+  <script>
+    var timestamps = {{ timestamps}};
+    var prices = {{ prices }};
+     var ctx = document.getElementById('myChart').getContext('2d');
+    var myChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: timestamps,
+        datasets: [{
+          label: 'Prices',
+          data: prices,
+          backgroundColor: 'rgba(255, 99, 132, 0.2)',
+          borderColor: 'rgba(255, 99, 132, 1)',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        scales: {
+          yAxes: [{
+            ticks: {
+              beginAtZero: true
+            }
+          }]
+        }
+      }
+    });
+      </script>
+
+
+
+
+
+{% endblock %}
