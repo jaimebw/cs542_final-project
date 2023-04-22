@@ -35,6 +35,7 @@ pub fn build_app() -> Rocket<Build> {
             routes![
                 products::add_product,
                 products::remove_product,
+                products::historic,
                 products::update_now,
                 products::tracked_product_list,
                 products::product_info,

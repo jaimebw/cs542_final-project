@@ -159,7 +159,8 @@ for i in range(NUMBER_OF_USERS):
            datetime = datetime0 
         else:
             datetime = datetime0 + timedelta(days = day) 
-        print(f"Date:{datetime}, asin:{asin}")
+        #print(f"Date:{datetime}, asin:{asin}")
+
 
         cur.execute("INSERT INTO For_Product_Data_Refresh(datetime,ASIN) \
                 VALUES (?,?)", [datetime,asin])

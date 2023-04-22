@@ -14,7 +14,7 @@ use rocket::serde::json::json;
 //      Maybe a is_anonymous method could work
 // TODO: The login checks within this file should be done via a middleware
 #[derive(FromRow,Serialize)]
-struct Product { ASIN: String , conditions:String}
+struct Product  {ASIN: String , Price:f32, datetime:String,name:String }
 
 
 #[get("/login")]
@@ -52,10 +52,43 @@ pub async fn index_page(session: Session<'_>,mut database: Connection<Sqlite>,
     else {
         // Add more info to the query, we need the name of the product
         let user_products=
-            sqlx::query_as::<_, Product>("SELECT ASIN, conditions FROM Subscribes_To WHERE sid = ?")
-            .bind(&session.user_id())
-            .fetch_all(&mut *database)
-            .await?;
+            sqlx::query_as::<_, Product>("
+                WITH Latest_Listings AS (
+                SELECT
+                    ASIN,
+                    MAX(datetime) AS latest_datetime
+                FROM
+                    Has_Listing_collected
+                WHERE
+                    ASIN IN (
+                        SELECT
+                            ASIN
+                        FROM
+                            Subscribes_To
+                        WHERE
+                            sid = ?)
+                GROUP BY
+                    ASIN
+            )
+            SELECT
+                hlc.ASIN,
+                hlc.Price,
+                hlc.datetime,
+                spm.name
+            FROM
+                Has_Listing_collected hlc
+            JOIN
+                Latest_Listings ll ON hlc.ASIN = ll.ASIN AND hlc.datetime = ll.latest_datetime
+            JOIN
+                Product_variant_Sold pvs ON hlc.ASIN = pvs.ASIN
+            JOIN
+                Sold_Product_Manufactured spm ON pvs.PID = spm.PID
+            ORDER BY
+                hlc.ASIN;")
+                        .bind(&session.user_id())
+                        .fetch_all(&mut *database)
+                        .await?;
+        info!("Query works!");
 
         Ok(Template::render("index", context! {
             products: &user_products,

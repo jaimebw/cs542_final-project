@@ -27,21 +27,32 @@
 		<table class="table">
 			<thead>
 				<tr>
-					<th>Condition</th>
-					<th>ASIN Number</th>
-					<th>Actions</th>
+					<th>Name</th>
+					<th>ASIN </th>
+					<th>Price</th>
+					<th>Last updated</th>
 				</tr>
 			</thead>
 			<tbody>
             {% for product in products %}
             <tr>
-                <td>{{ product.conditions }}</td>
+                <td>{{ product.name}}</td>
                 <td>{{ product.ASIN}}</td>
+                <td>{{ product.Price}}</td>
+                <td>{{ product.datetime}}</td>
+                <td>
+                    <form action="/product/historic" method="get">
+                        <input type="hidden" name="asin" value="{{ product.ASIN }}">
+                        <button type="submit" class="btn btn-success">Historic</button>
+                    </form>
+                </td>
                 <td>
                     <form action="/product/update" method="get">
                         <input type="hidden" name="asin" value="{{ product.ASIN }}">
                         <button type="submit" class="btn btn-success">Update</button>
                     </form>
+                </td>
+                <td>
                     <form action="/product/remove" method="get">
                         <input type="hidden" name="asin" value="{{ product.ASIN }}">
                         <button type="submit" class="btn btn-danger">Remove</button>

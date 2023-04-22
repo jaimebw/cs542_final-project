@@ -6,11 +6,40 @@ use crate::error::Error;
 use crate::scraper::{extract_asin, AmazonApi};
 use crate::session::UserId;
 use rocket::{get, State};
-use rocket_dyn_templates::Template;
+use rocket_dyn_templates::{context, Template};
 use sqlx::Sqlite;
 use log::info;
+use sqlx::FromRow;
+use serde::Serialize;
 
+#[derive(FromRow,Serialize)]
+struct ProductStory {Price: f32, datetime:String }
+impl ProductStory {
+    fn to_vectors(&self) -> (Vec<String>, Vec<f32>) {
+        let mut timestamps = Vec::new();
+        let mut prices = Vec::new();
 
+        timestamps.push(self.datetime.clone());
+        prices.push(self.Price);
+
+        (timestamps, prices)
+    }
+}
+/*
+impl ProductStory {
+    fn to_vectors(&self) -> (Vec<String>, Vec<f32>) {
+        let mut timestamps = Vec::new();
+        let mut prices = Vec::new();
+
+        for entry in self.data.iter() {
+            timestamps.push(entry[1].clone());
+            prices.push(entry[0]);
+        }
+
+        (timestamps, prices)
+    }
+}
+*/
 
 
 #[get("/add?<url>")]
@@ -62,10 +91,36 @@ pub async fn add_product(
     //
     //sqlx::query_as::<_, Product>("INSERT INTO ")
 
-
     Ok(Flash::success(Redirect::to("/index"),"Added new product" ))
        
 }
+
+#[get("/historic?<asin>")]
+pub async fn historic(
+    mut database: Connection<Sqlite>,
+    asin: &str,
+) -> crate::Result<Template> {
+    let product_historic = 
+        sqlx::query_as::<_,ProductStory>("SELECT Price, datetime FROM Has_Listing_collected WHERE ASIN = ? ")
+        .bind(asin)
+        .fetch_all(&mut *database)
+        .await?;
+
+    let mut timestamps = Vec::new();
+    let mut prices = Vec::new();
+
+    for story in product_historic.iter() {
+        let (story_timestamps, story_prices) = story.to_vectors();
+        timestamps.extend(story_timestamps);
+        prices.extend(story_prices);
+    }
+    Ok(Template::render("historic",context! {
+       prices: &prices,
+       timestamps: &timestamps
+    }))
+
+}
+    
 
 
 #[get("/remove?<asin>")]
