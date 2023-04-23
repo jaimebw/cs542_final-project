@@ -37,7 +37,7 @@ pub async fn login(
     match user_id {
         Some((id,)) => {
             session.set_user_id(id);
-            Ok(Flash::success(Redirect::to("/index"),"Succesfully logged in"))
+            Ok(Flash::success(Redirect::to("/index"),"Successfully logged in"))
         }
         None => Ok(Flash::success(Redirect::to("/login"), "Incorrect password/user"))
     }

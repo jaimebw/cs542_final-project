@@ -11,6 +11,8 @@ use sqlx::Sqlite;
 use log::info;
 use sqlx::FromRow;
 use serde::Serialize;
+use uuid::Uuid;
+use crate::scraper::product::DepartmentHierarchy;
 
 #[derive(FromRow,Serialize)]
 struct ProductStory {Price: f32, datetime:String }
@@ -33,12 +35,31 @@ pub async fn add_product(
     mut database: Connection<Sqlite>,
     amazon_api: &State<AmazonApi>,
     url: &str,
-) -> crate::Result<Flash<Redirect>>{
+) -> crate::Result<Flash<Redirect>> {
     // This method should results in adding the product information to the database
     // There should be no template as response
-    //
     info!("The requested URL is \n {}",&url);
 
+    let asin = match extract_asin(url) {
+        Some(asin) => asin.to_ascii_uppercase(),
+        None => return Ok(Flash::error(Redirect::to("/index"), "URL must be a valid Amazon product URL")),
+    };
+
+    let product = match amazon_api.get_product_info(&asin).await? {
+        Some(product) => product,
+        None => {
+            let flash_error = Flash::error(Redirect::to("/index"), "Product not found");
+            return Err(Error::from(flash_error));
+        }
+    };
+
+
+    let product_id = match database.product_exists(&product.asin).await? {
+        Some(id) => id,
+        None =>  database.add_product(&product).await?,
+    };
+
+    database.track_product(user_id, product_id).await?;
     // Logic of the request:
     //  1. Get the ASIN number
     //      1.1 If error -> Flash not found product 
@@ -48,27 +69,7 @@ pub async fn add_product(
     //  3. SQL Insert into db 
 
 
-    let mut flash = Flash::success(Redirect::to("/index"), "Added product!");
-
-    let asin = match extract_asin(url) {
-        Some(asin) => asin.to_ascii_uppercase(),
-        None => {
-            flash = Flash::error(Redirect::to("/index"), "Product not found");
-            return Err(Error::FlashError(flash));
-        }
-    };
-
-    let product = match amazon_api.get_product_info(&asin).await? {
-        Some(product) => {
-            info!("{}",&product.name);
-            product
-        },
-        None => {
-            info!("No products found");
-            flash = Flash::error(Redirect::to("/index"), "Product not found");
-            return Err(Error::FlashError(flash));
-        }
-    };
+    // let mut flash = Flash::success(Redirect::to("/index"), "Added product!");
 
     // TODO: INSERT Query here
     // TODO: see how the product variable transform to a json to introduce it inside the INSERT
@@ -77,7 +78,6 @@ pub async fn add_product(
     //sqlx::query_as::<_, Product>("INSERT INTO ")
 
     Ok(Flash::success(Redirect::to("/index"),"Added new product" ))
-       
 }
 
 #[get("/historic?<asin>")]
