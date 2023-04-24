@@ -60,22 +60,6 @@ pub async fn add_product(
     };
 
     database.track_product(user_id, product_id).await?;
-    // Logic of the request:
-    //  1. Get the ASIN number
-    //      1.1 If error -> Flash not found product 
-    //  2. Get product info with ASIN
-    //      2.1 If error -> Flash not found product
-    //      2.2 No SQL INSERT operation
-    //  3. SQL Insert into db 
-
-
-    // let mut flash = Flash::success(Redirect::to("/index"), "Added product!");
-
-    // TODO: INSERT Query here
-    // TODO: see how the product variable transform to a json to introduce it inside the INSERT
-    // operation
-    //
-    //sqlx::query_as::<_, Product>("INSERT INTO ")
 
     Ok(Flash::success(Redirect::to("/index"),"Added new product" ))
 }

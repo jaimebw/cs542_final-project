@@ -137,7 +137,7 @@ impl Connection<Sqlite> {
         let url  = format!("https://amazon.com/dp/{}/", &product.asin);
 
         let new_id = Uuid::new_v4();
-        sqlx::query("INSERT INTO Sold_Product_Manufactured (PID, URL, name, DeptID, ManuID) VALUES (?, ?, ?, ?, ?)")
+        sqlx::query("INSERT INTO Sold_Product_Manufactured (PID, URL, name, DepID, ManuID) VALUES (?, ?, ?, ?, ?)")
             .bind(new_id)
             .bind(url)
             .bind(&product.name)
