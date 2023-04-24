@@ -119,10 +119,6 @@ pub async fn update_now(
     asin: &str,
 ) -> crate::Result<Template> {
     // TODO: Verify that asin is being tracked by the current user
-    if database.product_exists(&product.asin).await?.is_none() {
-        return Err(Error::from("Product must be added before it can be updated"))
-    };
-
     let product = match amazon_api.get_product_info(&asin).await? {
         Some(product) => product,
         None => {
@@ -131,8 +127,12 @@ pub async fn update_now(
         }
     };
 
-    let department = database.get_or_add_department(&product.department);
-    let manufacturer = database.get_or_add_manufacturer(&product.manufacturer);
+    if database.product_exists(&product.asin).await?.is_none() {
+        return Err(Error::from("Product must be added before it can be updated"))
+    };
+
+    let department = database.get_or_add_department(&product.department).await?;
+    let manufacturer = database.get_or_add_manufacturer(&product.manufacturer).await?;
 
     sqlx::query("
     UPDATE Sold_Product_Manufactured
