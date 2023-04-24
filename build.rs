@@ -14,18 +14,8 @@ fn main() -> rusqlite::Result<()> {
 
     // Remove old database
     if <str as AsRef<Path>>::as_ref(TEST_DATABASE).exists() {
-        let connection = Connection::open(TEST_DATABASE)?;
-        //connection.execute_batch(include_str!("schema.sql"))?;
-
-        // Add test users for convenience
-        add_test_data(&connection, "test@test.me", "12345678",
-                      "Cooldep1",
-                      "Acme",
-                      "www.lol.com","Super prod",
-                      "First var","Cool type",
-                      "AAAAAAAAAA","GOOD","Yesterday")?;
         return Ok(())
-    }    
+    }
 
 
     match fs::remove_file(TEST_DATABASE) {
@@ -35,7 +25,7 @@ fn main() -> rusqlite::Result<()> {
     }
    
     let connection = Connection::open(TEST_DATABASE)?;
-    //connection.execute_batch(include_str!("schema.sql"))?;
+    connection.execute_batch(include_str!("schema.sql"))?;
 
     // Add test users for convenience
     add_test_data(&connection, "test@test.me", "12345678",
