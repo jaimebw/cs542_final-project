@@ -119,9 +119,34 @@ pub async fn update_now(
     asin: &str,
 ) -> crate::Result<Template> {
     // TODO: Verify that asin is being tracked by the current user
+    if database.product_exists(&product.asin).await?.is_none() {
+        return Err(Error::from("Product must be added before it can be updated"))
+    };
+
+    let product = match amazon_api.get_product_info(&asin).await? {
+        Some(product) => product,
+        None => {
+            let flash_error = Flash::error(Redirect::to("/index"), "Product not found");
+            return Err(Error::from(flash_error));
+        }
+    };
+
+    let department = database.get_or_add_department(&product.department);
+    let manufacturer = database.get_or_add_manufacturer(&product.manufacturer);
+
+    sqlx::query("
+    UPDATE Sold_Product_Manufactured
+        SET name = ?, DepID = ?, ManuID = ?
+        WHERE PID IN (SELECT PID FROM Product_variant_Sold WHERE ASIN = ?);
+    ")
+        .bind(&product.name)
+        .bind(department)
+        .bind(manufacturer)
+        .bind(asin)
+        .execute(&mut *database)
+        .await?;
 
     let offers = amazon_api.get_offers_for_asin(&asin).await?;
-
     // TODO: Add the new offers to database
 
     // Return the product page with the newly updated data
