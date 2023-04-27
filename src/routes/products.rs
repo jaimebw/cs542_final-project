@@ -1,3 +1,4 @@
+use chrono::Utc;
 use crate::database::Connection;
 use crate::session::Session;
 use rocket::http::RawStr;
@@ -12,7 +13,7 @@ use log::info;
 use sqlx::FromRow;
 use serde::Serialize;
 use uuid::Uuid;
-use crate::scraper::product::DepartmentHierarchy;
+use crate::scraper::product::{DepartmentHierarchy, Product};
 
 #[derive(FromRow,Serialize)]
 struct ProductStory {Price: f32, datetime:String }
@@ -59,7 +60,10 @@ pub async fn add_product(
         None =>  database.add_product(&product).await?,
     };
 
-    database.track_product(user_id, product_id).await?;
+    database.track_product(user_id, product_id, &asin).await?;
+
+
+    update_now(user_id, database, amazon_api, &asin).await?;
 
     Ok(Flash::success(Redirect::to("/index"),"Added new product" ))
 }
@@ -117,7 +121,7 @@ pub async fn update_now(
     mut database: Connection<Sqlite>,
     amazon_api: &State<AmazonApi>,
     asin: &str,
-) -> crate::Result<Template> {
+) -> crate::Result<Flash<Redirect>> {
     // TODO: Verify that asin is being tracked by the current user
     let product = match amazon_api.get_product_info(&asin).await? {
         Some(product) => product,
@@ -149,8 +153,36 @@ pub async fn update_now(
     let offers = amazon_api.get_offers_for_asin(&asin).await?;
     // TODO: Add the new offers to database
 
+
+    let today = Utc::now().date_naive();
+    sqlx::query("INSERT INTO For_Product_Data_Refresh (datetime, ASIN) VALUES (?, ?)")
+        .bind(today)
+        .bind(&product.asin)
+        .execute(&mut *database)
+        .await?;
+
+    for offer in offers.into_iter().take(1) {
+        let condition_str = format!("{:?}", offer.condition);
+        let shipped_by = database.get_or_add_company(&offer.ships_from).await?;
+        let sold_by = database.get_or_add_company(&offer.sold_by).await?;
+        let listing_id = Uuid::new_v4();
+
+        sqlx::query("INSERT INTO Has_Listing_collected (ListingID,ASIN,condition,\
+                    Price,datetime,shipped_comID,sold_ComID) VALUES (?,?,?,?,?,?,?)")
+            .bind(listing_id)
+            .bind(&product.asin)
+            .bind(condition_str)
+            .bind(f64::from(offer.price))
+            .bind(today)
+            .bind(shipped_by)
+            .bind(sold_by)
+            .execute(&mut *database)
+            .await?;
+    }
+
     // Return the product page with the newly updated data
-    product_info(database, asin).await
+    // product_info(database, asin).await
+    Ok(Flash::success(Redirect::to("/index"),"Updated product" ))
 }
 
 #[get("/list")]

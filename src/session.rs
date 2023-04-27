@@ -69,7 +69,7 @@ impl<'r> FromRequest<'r> for Session<'r> {
 
 /// A helper type that can be both be used as an sql value and input for a request. Adding this as
 /// an input to a request will require the requester be logged in.
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 #[repr(transparent)]
 pub struct UserId(pub Uuid);
 

@@ -130,6 +130,26 @@ impl Connection<Sqlite> {
         Ok(new_id)
     }
 
+    pub async fn get_or_add_company(&mut self, name: &str) -> sqlx::Result<Uuid> {
+        let current_id = sqlx::query_as("SELECT ComID FROM Company WHERE name = ?")
+            .bind(name)
+            .fetch_optional(&mut self.connection)
+            .await?;
+
+        if let Some((id,)) = current_id {
+            return Ok(id)
+        }
+
+        let new_id = Uuid::new_v4();
+        sqlx::query("INSERT INTO Company (ComID, name) VALUES (?, ?)")
+            .bind(new_id)
+            .bind(name)
+            .execute(&mut self.connection)
+            .await?;
+
+        Ok(new_id)
+    }
+
     pub async fn add_product(&mut self, product: &Product) -> sqlx::Result<Uuid> {
         let manufacturer_id = self.get_or_add_manufacturer(&product.manufacturer).await?;
         let department_id = self.get_or_add_department(&product.department).await?;
@@ -157,7 +177,7 @@ impl Connection<Sqlite> {
         Ok(new_id)
     }
 
-    pub async fn track_product(&mut self, user: UserId, product: Uuid) -> sqlx::Result<()> {
+    pub async fn track_product(&mut self, user: UserId, product: Uuid, asin: &str) -> sqlx::Result<()> {
         let (exits,): (bool,) = sqlx::query_as("SELECT EXISTS(SELECT 1 FROM Tracks WHERE sid = ? AND PID = ?)")
             .bind(&user)
             .bind(product)
@@ -168,6 +188,20 @@ impl Connection<Sqlite> {
             sqlx::query("INSERT INTO Tracks (sid, PID) VALUES (?, ?)")
                 .bind(user)
                 .bind(product)
+                .execute(&mut self.connection)
+                .await?;
+
+            sqlx::query("INSERT INTO Deal_Alert_on (conditions, ASIN, last_notification) VALUES (?, ?, ?)")
+                .bind("New")
+                .bind(asin)
+                .bind("")
+                .execute(&mut self.connection)
+                .await?;
+
+            sqlx::query("INSERT INTO Subscribes_To (conditions, ASIN, sid) VALUES (?, ?, ?)")
+                .bind("New")
+                .bind(asin)
+                .bind(user)
                 .execute(&mut self.connection)
                 .await?;
         }
