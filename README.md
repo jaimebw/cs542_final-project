@@ -1,5 +1,11 @@
 # CS 542 Final Project: Amazon Price tracker
 
+This an example web app build in Rust for our final project. It uses:
+* Backend: Rocket(Rust)
+* Templates: Tera(Rust)
+* Frontend: Boostrap and ChartJS
+
+
 ## How to install and run 
 For downloading the code just run:
 ```bash
